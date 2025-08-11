@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { MetricsCard } from "@/components/metrics-card"
 import { StatsChart } from "@/components/stats-chart"
 import { VaultTable } from "@/components/vault-table"
@@ -13,7 +11,9 @@ import { TransactionHistory } from "@/components/transaction-history"
 import { DeFiPositions } from "@/components/defi-positions"
 import { YieldFarming } from "@/components/yield-farming"
 import { CrossChainBridge } from "@/components/cross-chain-bridge"
-import { Wallet, TrendingUp, RefreshCw, AlertCircle } from "lucide-react"
+import { HamburgerMenu } from "@/components/ui/hamburger-menu"
+import { Sidebar } from "@/components/sidebar"
+import { RefreshCw, AlertCircle } from "lucide-react"
 import { PortfolioAPI } from '@/lib/api'
 
 // Transaction interface
@@ -54,16 +54,15 @@ interface PortfolioDashboardProps {
 }
 
 export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDashboardProps) {
-  const pathname = usePathname()
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState(new Date())
-  const portfolioAPI = new PortfolioAPI()
+  const portfolioAPI = useMemo(() => new PortfolioAPI(), [])
 
   // Basic fallback data (without mock transactions)
-  const mockData: PortfolioData = {
+  const mockData: PortfolioData = useMemo(() => ({
     totalBalance: 0,
     totalBalanceUSD: 0,
     dailyChange: 0,
@@ -77,7 +76,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
     balanceUSD: 0,
     totalValue: 0,
     transactionCount: 0
-  }
+  }), [])
 
   const fetchPortfolioData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -129,10 +128,6 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
     fetchPortfolioData(true)
   }
 
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`
-  }
-
   // Show loading spinner only on initial load
   if (isLoading && !portfolioData) {
     return (
@@ -153,59 +148,16 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="grid lg:grid-cols-[280px_1fr]">
-        {/* Sidebar */}
-        <aside className="border-r border-orange-500/20 bg-gray-900/50 backdrop-blur">
-          <div className="flex h-16 items-center gap-2 border-b border-orange-500/20 px-6">
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg"></div>
-            <span className="font-bold">Prism</span>
-          </div>
-
-          <div className="p-4">
-            <div className="flex items-center gap-2 p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
-              <Wallet className="h-4 w-4 text-orange-500" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-400">Connected Wallet</p>
-                <p className="text-sm font-mono text-orange-500 truncate">{formatAddress(walletAddress)}</p>
-              </div>
-            </div>
-          </div>
-
-          <nav className="space-y-2 px-2">
-            <Button
-              asChild
-              variant="ghost"
-              className={`w-full justify-start gap-2 ${pathname.startsWith("/dashboard") ? "text-orange-500 bg-orange-500/10" : "text-gray-300 hover:text-orange-500 hover:bg-orange-500/10"}`}
-            >
-              <Link href="/dashboard" className="flex items-center gap-2 w-full">
-                <TrendingUp className="h-4 w-4" />
-                Portfolio
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              className={`w-full justify-start gap-2 ${pathname.startsWith("/marketplace") ? "text-orange-500 bg-orange-500/10" : "text-gray-300 hover:text-orange-500 hover:bg-orange-500/10"}`}
-            >
-              <Link href="/marketplace" className="flex items-center gap-2 w-full">
-                <TrendingUp className="h-4 w-4" />
-                Marketplace
-              </Link>
-            </Button>
-          </nav>
-
-          <div className="absolute bottom-4 left-4 right-4">
-            <Button
-              onClick={onDisconnect}
-              variant="outline"
-              className="w-full border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black bg-transparent"
-            >
-              Disconnect
-            </Button>
-          </div>
-        </aside>
+        {/* Hamburger Menu with Sidebar */}
+        <HamburgerMenu>
+          <Sidebar 
+            walletAddress={walletAddress} 
+            onDisconnect={onDisconnect}
+          />
+        </HamburgerMenu>
 
         {/* Main Content */}
-        <main className="p-6">
+        <main className="p-6 lg:p-6 pt-20 lg:pt-6 pr-20 lg:pr-6">{/* Add top padding on mobile for hamburger button and right padding for hamburger */}
           <div className="mb-6 flex items-center justify-between">
             <div className="space-y-1">
               <h1 className="text-2xl font-bold">Portfolio Overview</h1>
