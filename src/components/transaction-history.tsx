@@ -148,7 +148,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
       <div className="space-y-6">
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500 mb-3" />
-          <span className="text-gray-400">Loading transaction history...</span>
+          <span className="text-gray-400">Loading transaction history....</span>
           <span className="text-xs text-gray-500 mt-2">Scanning blockchain for your transactions</span>
           <span className="text-xs text-orange-500 mt-1">This may take some time to complete</span>
         </div>
