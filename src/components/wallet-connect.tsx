@@ -1,29 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, AlertCircle, TrendingUp, DollarSign, RefreshCw, Copy, ExternalLink } from "lucide-react";
+import { Wallet, AlertCircle } from "lucide-react";
 
-// Mock data for demo
-const mockPortfolioData = {
-  totalBalance: 2.45,
-  totalBalanceUSD: 74892,
-  totalDeposits: 54892,
-  accruedYield: 20892,
-  dailyChange: -2.1,
-  positions: 12,
-  activeYields: 5,
-};
+// Ethereum window interface
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  isMetaMask?: boolean;
+}
 
-const mockTransactions = [
-  { id: '1', type: 'Deposit', amount: '0.5 cBTC', value: '$15,250', status: 'Confirmed', time: '2 hours ago' },
-  { id: '2', type: 'Yield', amount: '0.02 cBTC', value: '$610', status: 'Confirmed', time: '1 day ago' },
-  { id: '3', type: 'Swap', amount: '0.1 cBTC', value: '$3,050', status: 'Pending', time: '2 days ago' },
-];
+declare global {
+  interface Window {
+    ethereum?: EthereumProvider;
+  }
+}
 
 export function WalletConnect({ onConnect }: { onConnect: (address: string) => void }) {
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const citreaTestnetConfig = {
     chainId: '0x13fb', // 5115 in hex
@@ -39,15 +33,21 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
 
   const addCitreaTestnet = async () => {
     try {
+      if (!window.ethereum) {
+        throw new Error('MetaMask not found');
+      }
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [citreaTestnetConfig]
       });
-    } catch (addError) {
-      if (addError.code === 4902) {
+    } catch (addError: unknown) {
+      if (typeof addError === 'object' && addError !== null && 'code' in addError && (addError as { code: number }).code === 4902) {
         throw new Error('Failed to add Citrea Testnet. Please add it manually.');
       } else {
         try {
+          if (!window.ethereum) {
+            throw new Error('MetaMask not found');
+          }
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: citreaTestnetConfig.chainId }]
@@ -75,7 +75,7 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
       // Request account access first
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
-      });
+      }) as string[];
 
       if (accounts.length === 0) {
         throw new Error("No accounts found");
@@ -94,9 +94,10 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       onConnect(accounts[0]);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Wallet connection error:', err);
-      setError(err.message || "Failed to connect wallet");
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet";
+      setError(errorMessage);
     } finally {
       setIsConnecting(false);
     }

@@ -1,6 +1,26 @@
 // File: app/api/citrea/portfolio/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { CitreaAPI, PortfolioData } from '@/lib/citrea-api'
+import { CitreaAPI, PortfolioData, Transaction as ImportedTransaction } from '@/lib/citrea-api'
+
+// Interface for transaction data
+interface Transaction {
+  type: 'received' | 'sent'
+  valueFormatted: number
+  timestamp?: number
+  hash?: string
+  blockNumber?: number
+  from?: string
+  to?: string
+}
+
+// Interface for token data
+interface Token {
+  symbol: string
+  balanceFormatted: number
+  balanceUSD?: number
+  address?: string
+  decimals?: number
+}
 
 // Interface for the transformed portfolio response
 interface PortfolioResponse {
@@ -17,8 +37,8 @@ interface PortfolioResponse {
   activeYields: number
   
   // Detailed data
-  transactions: any[]
-  tokens: any[]
+  transactions: TransformedTransaction[]
+  tokens: TransformedToken[]
   nativeBalance: number
   
   // Metadata
@@ -29,6 +49,21 @@ interface PortfolioResponse {
     rpcHealthy: boolean
     latestBlock?: number
   }
+}
+
+// Interface for transformed transaction
+interface TransformedTransaction extends Transaction {
+  valueUSD: number
+  formattedValue: string
+  age: number
+  status: string
+}
+
+// Interface for transformed token
+interface TransformedToken extends Token {
+  valueUSD: number
+  formattedBalance: string
+  percentage: number
 }
 
 export async function GET(request: NextRequest) {
@@ -85,6 +120,7 @@ export async function GET(request: NextRequest) {
       // Detailed data
       transactions: portfolioData.transactions.map(tx => ({
         ...tx,
+        type: tx.type || 'received', // Provide default value
         valueUSD: tx.valueFormatted * (portfolioData.balanceUSD / portfolioData.balance || 0),
         formattedValue: `${tx.valueFormatted.toFixed(6)} BTC`,
         age: Date.now() - (tx.timestamp || 0) * 1000,
@@ -92,8 +128,9 @@ export async function GET(request: NextRequest) {
       })),
       tokens: portfolioData.tokens.map(token => ({
         ...token,
+        symbol: token.symbol || 'UNKNOWN', // Provide default value
         valueUSD: token.balanceUSD || 0,
-        formattedBalance: `${token.balanceFormatted.toFixed(6)} ${token.symbol}`,
+        formattedBalance: `${token.balanceFormatted.toFixed(6)} ${token.symbol || 'UNKNOWN'}`,
         percentage: portfolioData.totalValue > 0 ? (token.balanceUSD || 0) / portfolioData.totalValue * 100 : 0
       })),
       nativeBalance: portfolioData.balance,
@@ -126,23 +163,24 @@ export async function GET(request: NextRequest) {
       }
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Portfolio API Error:', {
       address: walletAddress,
-      error: error.message,
-      stack: error.stack
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     })
 
     // Return appropriate error response
-    const statusCode = error.message?.includes('Invalid address') ? 400 : 500
-    const errorMessage = statusCode === 400 
+    const errorMessage = error instanceof Error && error.message?.includes('Invalid address') 
       ? 'Invalid wallet address' 
       : 'Failed to fetch portfolio data. Please try again later.'
+    
+    const statusCode = error instanceof Error && error.message?.includes('Invalid address') ? 400 : 500
 
     return NextResponse.json(
       { 
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details: process.env.NODE_ENV === 'development' && error instanceof Error ? error.message : undefined,
         timestamp: new Date().toISOString()
       }, 
       { status: statusCode }
@@ -151,7 +189,7 @@ export async function GET(request: NextRequest) {
 }
 
 // OPTIONS handler for CORS preflight requests
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -169,14 +207,14 @@ function isValidEthereumAddress(address: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(address)
 }
 
-function calculateTotalDeposits(transactions: any[]): number {
+function calculateTotalDeposits(transactions: ImportedTransaction[]): number {
   // Calculate total incoming transactions (deposits)
   return transactions
     .filter(tx => tx.type === 'received')
     .reduce((sum, tx) => sum + tx.valueFormatted, 0)
 }
 
-function calculateAccruedYield(transactions: any[], currentBalance: number): number {
+function calculateAccruedYield(transactions: ImportedTransaction[], currentBalance: number): number {
   // Simple yield calculation: current balance - total deposits + total withdrawals
   const totalDeposits = calculateTotalDeposits(transactions)
   const totalWithdrawals = transactions
@@ -187,7 +225,7 @@ function calculateAccruedYield(transactions: any[], currentBalance: number): num
   return Math.max(0, accruedYield) // Don't show negative yield
 }
 
-function calculateDailyChange(transactions: any[]): number {
+function calculateDailyChange(transactions: ImportedTransaction[]): number {
   // Calculate 24h change based on transactions
   const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
   const recentTransactions = transactions.filter(tx => 
@@ -218,19 +256,8 @@ function calculateActiveYields(tokens: any[]): number {
   const yieldTokens = tokens.filter(token => 
     token.symbol?.toLowerCase().includes('lp') || 
     token.symbol?.toLowerCase().includes('stake') ||
-    token.balanceFormatted > 0
+    (token.balanceFormatted || 0) > 0
   )
   
   return yieldTokens.length
-}
-
-// Additional utility function for error handling
-function createErrorResponse(message: string, statusCode: number = 500) {
-  return NextResponse.json(
-    { 
-      error: message,
-      timestamp: new Date().toISOString()
-    }, 
-    { status: statusCode }
-  )
 }

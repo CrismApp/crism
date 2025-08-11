@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ transactions }, {
       headers: { 'Cache-Control': 'public, s-maxage=60' }
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
   }
 }

@@ -599,7 +599,7 @@ export class CitreaAPI {
   }
 
   // Basic RPC call without timeout
-  private async makeRPCCall(method: string, params: any[] = []): Promise<any> {
+  private async makeRPCCall(method: string, params: unknown[] = []): Promise<unknown> {
     try {
       const response = await fetch(this.citreaRPC, {
         method: 'POST',
@@ -633,7 +633,7 @@ export class CitreaAPI {
   }
 
   // CRITICAL FIX: Batch RPC calls together without timeout
-  private async makeBatchRPCCall(calls: { method: string; params: any[] }[]): Promise<any[]> {
+  private async makeBatchRPCCall(calls: { method: string; params: unknown[] }[]): Promise<unknown[]> {
     try {
       const batchPayload = calls.map((call, index) => ({
         jsonrpc: '2.0',
@@ -670,12 +670,12 @@ export class CitreaAPI {
         this.getBTCPrice()
       ])
 
-      const balance = parseInt(balanceWei, 16) / 1e18
+      const balance = parseInt(balanceWei as string, 16) / 1e18
       const balanceUSD = balance * btcPrice
 
       return {
         balance,
-        balanceWei,
+        balanceWei: balanceWei as string,
         balanceUSD
       }
     } catch (error) {
@@ -786,13 +786,13 @@ export class CitreaAPI {
     }
     
     return data.result
-      .map((token: any) => ({
-        contract: token.contractAddress,
-        symbol: token.symbol,
-        name: token.name,
-        decimals: parseInt(token.decimals),
-        balance: token.balance,
-        balanceFormatted: parseInt(token.balance) / Math.pow(10, parseInt(token.decimals)),
+      .map((token: Record<string, unknown>) => ({
+        contract: token.contractAddress as string,
+        symbol: token.symbol as string,
+        name: token.name as string,
+        decimals: parseInt(token.decimals as string),
+        balance: token.balance as string,
+        balanceFormatted: parseInt(token.balance as string) / Math.pow(10, parseInt(token.decimals as string)),
         balanceUSD: 0
       }))
       .filter((token: TokenBalance) => token.balanceFormatted > 0)
@@ -810,13 +810,17 @@ export class CitreaAPI {
         { method: 'eth_call', params: [{ to: tokenContract, data: '0x06fdde03' }, 'latest'] }  // name
       ]
 
-      const [balanceResult, decimalsResult, symbolResult, nameResult] = await this.makeBatchRPCCall(calls)
+      const results = await this.makeBatchRPCCall(calls);
+      const balanceResult = results[0];
+      const decimalsResult = results[1];
+      const symbolResult = results[2];
+      const nameResult = results[3];
 
       if (!balanceResult || balanceResult === '0x0') {
         return null
       }
 
-      const balance = parseInt(balanceResult, 16)
+      const balance = parseInt(balanceResult as string, 16)
       if (balance === 0) return null
 
       // Use cached token info if available
@@ -825,9 +829,9 @@ export class CitreaAPI {
       const now = Date.now()
 
       if (!tokenInfo || (now - tokenInfo.timestamp) > 3600000) { // Cache for 1 hour
-        const decimals = decimalsResult ? parseInt(decimalsResult, 16) : 18
-        const symbol = symbolResult && symbolResult !== '0x' ? this.hexToString(symbolResult) : 'UNKNOWN'
-        const name = nameResult && nameResult !== '0x' ? this.hexToString(nameResult) : 'Unknown Token'
+        const decimals = decimalsResult ? parseInt(decimalsResult as string, 16) : 18
+        const symbol = symbolResult && symbolResult !== '0x' ? this.hexToString(symbolResult as string) : 'UNKNOWN'
+        const name = nameResult && nameResult !== '0x' ? this.hexToString(nameResult as string) : 'Unknown Token'
 
         tokenInfo = { symbol, name, decimals, timestamp: now }
         this.tokenInfoCache[cacheKey] = tokenInfo
@@ -889,7 +893,7 @@ export class CitreaAPI {
     try {
       console.log(`RPC Scan: Scanning ${blocksToScan} blocks for address ${address}`);
       const latestBlock = await this.makeRPCCall('eth_blockNumber', [])
-      const latestBlockNumber = parseInt(latestBlock, 16)
+      const latestBlockNumber = parseInt(latestBlock as string, 16)
       
       // Use configurable block scan range
       const actualBlocksToScan = Math.min(blocksToScan, latestBlockNumber);
@@ -1028,8 +1032,8 @@ export class CitreaAPI {
 
       return {
         isHealthy: true,
-        latestBlock: parseInt(blockNumber, 16),
-        chainId: chainId
+        latestBlock: parseInt(blockNumber as string, 16),
+        chainId: chainId as string
       }
     } catch (error) {
       return {

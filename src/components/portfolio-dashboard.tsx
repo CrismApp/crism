@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -13,8 +13,40 @@ import { TransactionHistory } from "@/components/transaction-history"
 import { DeFiPositions } from "@/components/defi-positions"
 import { YieldFarming } from "@/components/yield-farming"
 import { CrossChainBridge } from "@/components/cross-chain-bridge"
-import { Wallet, TrendingUp, DollarSign, Percent, RefreshCw, AlertCircle } from "lucide-react"
+import { Wallet, TrendingUp, RefreshCw, AlertCircle } from "lucide-react"
 import { PortfolioAPI } from '@/lib/api'
+
+// Transaction interface
+interface Transaction {
+  hash: string
+  from: string
+  to: string
+  value: string
+  valueFormatted: number
+  gasPrice: string
+  gasUsed?: string
+  blockNumber: number
+  timestamp?: number
+  status?: string
+  type?: 'sent' | 'received'
+}
+
+// Portfolio data interface
+interface PortfolioData {
+  totalBalance: number
+  totalBalanceUSD: number
+  dailyChange: number
+  totalDeposits: number
+  accruedYield: number
+  positions: number
+  activeYields: number
+  transactions: Transaction[]
+  tokens: unknown[]
+  balance: number
+  balanceUSD: number
+  totalValue: number
+  transactionCount: number
+}
 
 interface PortfolioDashboardProps {
   walletAddress: string
@@ -23,7 +55,7 @@ interface PortfolioDashboardProps {
 
 export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDashboardProps) {
   const pathname = usePathname()
-  const [portfolioData, setPortfolioData] = useState<any>(null)
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +63,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
   const portfolioAPI = new PortfolioAPI()
 
   // Basic fallback data (without mock transactions)
-  const mockData = {
+  const mockData: PortfolioData = {
     totalBalance: 0,
     totalBalanceUSD: 0,
     dailyChange: 0,
@@ -47,11 +79,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
     transactionCount: 0
   }
 
-  useEffect(() => {
-    fetchPortfolioData()
-  }, [walletAddress])
-
-  const fetchPortfolioData = async (isRefresh = false) => {
+  const fetchPortfolioData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setIsRefreshing(true)
     } else {
@@ -91,7 +119,11 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }
+  }, [portfolioAPI, portfolioData, walletAddress, mockData])
+
+  useEffect(() => {
+    fetchPortfolioData()
+  }, [fetchPortfolioData])
 
   const handleRefresh = () => {
     fetchPortfolioData(true)
@@ -109,14 +141,14 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
           <div className="w-16 h-16 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-orange-500">Loading your portfolio...</p>
           <p className="text-gray-400 text-sm mt-2">This may take some time as we scan the blockchain...</p>
-          <p className="text-gray-400 text-xs mt-1">We're scanning up to 1000 blocks on the Citrea network</p>
+          <p className="text-gray-400 text-xs mt-1">We&apos;re scanning up to 1000 blocks on the Citrea network</p>
         </div>
       </div>
     )
   }
 
   // Use mock data if no portfolio data exists
-  const displayData = portfolioData
+  const displayData = portfolioData || mockData
 
   return (
     <div className="min-h-screen bg-black text-white">

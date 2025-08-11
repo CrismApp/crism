@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LoadingScreen } from "@/components/loading-screen"
 import { LandingPage } from "@/components/LandingPage"

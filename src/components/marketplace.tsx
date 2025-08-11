@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -197,10 +198,12 @@ export function Marketplace() {
                   className="p-6 bg-gray-900/50 border-orange-500/20 hover:border-orange-500/40 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <img
+                    <Image
                       src={protocol.logo || "/placeholder.svg"}
                       alt={protocol.name}
-                      className="w-10 h-10 rounded-full"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold text-white">{protocol.name}</h3>
@@ -298,10 +301,12 @@ export function Marketplace() {
                   </div>
 
                   <div className="flex items-center gap-3 mb-4">
-                    <img
+                    <Image
                       src={protocol.logo || "/placeholder.svg"}
                       alt={protocol.name}
-                      className="w-10 h-10 rounded-full"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
                     />
                     <div>
                       <h3 className="font-semibold text-white">{protocol.name}</h3>

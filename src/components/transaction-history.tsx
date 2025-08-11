@@ -19,6 +19,20 @@ interface Transaction {
   type?: 'sent' | 'received'
 }
 
+// Interface for processed transactions displayed in the UI
+interface ProcessedTransaction {
+  hash: string
+  type: string
+  amount: string
+  amountUSD: string
+  addressOrProtocol: string
+  status: string
+  time: string
+  fee: string
+  block: string
+  isSent: boolean
+}
+
 interface TransactionHistoryProps {
   walletAddress: string
   transactions: Transaction[]
@@ -26,7 +40,7 @@ interface TransactionHistoryProps {
 }
 
 export function TransactionHistory({ walletAddress, transactions, isLoading }: TransactionHistoryProps) {
-  const [processedTransactions, setProcessedTransactions] = useState<any[]>([])
+  const [processedTransactions, setProcessedTransactions] = useState<ProcessedTransaction[]>([])
   const [transactionStats, setTransactionStats] = useState({
     totalSent: 0,
     totalReceived: 0,
@@ -221,7 +235,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
                 Transactions will appear here once you start using your wallet on the Citrea network
               </div>
               <div className="text-sm text-orange-500 mt-4">
-                Note: We're scanning the last 1000 blocks on the Citrea network
+                Note: We&apos;re scanning the last 1000 blocks on the Citrea network
               </div>
             </div>
           ) : (
@@ -254,8 +268,8 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getTypeIcon(tx.type)}
-                          <Badge className={getTypeColor(tx.type)}>{tx.type}</Badge>
+                          {getTypeIcon(tx.type || 'Unknown')}
+                          <Badge className={getTypeColor(tx.type || 'Unknown')}>{tx.type || 'Unknown'}</Badge>
                         </div>
                       </TableCell>
                       <TableCell>
