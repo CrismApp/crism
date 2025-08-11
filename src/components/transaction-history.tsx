@@ -105,7 +105,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
       totalFees,
       totalCount: transactions.length
     })
-  }, [transactions, walletAddress])
+  }, [transactions, walletAddress, isLoading])
 
   const formatTimeAgo = (timestamp: number): string => {
     const now = Date.now()

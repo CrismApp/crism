@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
       accruedYield: calculateAccruedYield(portfolioData.transactions, portfolioData.balance),
       dailyChange: calculateDailyChange(portfolioData.transactions),
       positions: portfolioData.tokens.length + (portfolioData.balance > 0 ? 1 : 0), // Include native token
-      activeYields: calculateActiveYields(portfolioData.tokens),
+      activeYields: calculateActiveYields(portfolioData.tokens as Token[]),
       
       // Detailed data
       transactions: portfolioData.transactions.map(tx => ({
@@ -250,13 +250,13 @@ function calculateDailyChange(transactions: ImportedTransaction[]): number {
   return dailyVolume > 0 ? (netChange / dailyVolume) * 100 : 0
 }
 
-function calculateActiveYields(tokens: any[]): number {
+function calculateActiveYields(tokens: Token[]): number {
   // Count tokens that might represent yield-bearing positions
   // This is a placeholder - you'd need to identify actual DeFi tokens
-  const yieldTokens = tokens.filter(token => 
-    token.symbol?.toLowerCase().includes('lp') || 
+  const yieldTokens = tokens.filter(token =>
+    token.symbol?.toLowerCase().includes('lp') ||
     token.symbol?.toLowerCase().includes('stake') ||
-    (token.balanceFormatted || 0) > 0
+    token.balanceFormatted > 0
   )
   
   return yieldTokens.length

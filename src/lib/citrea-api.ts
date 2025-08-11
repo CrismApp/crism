@@ -572,6 +572,22 @@ export interface Transaction {
   type?: 'sent' | 'received'
 }
 
+interface RPCTransaction {
+  hash: string;
+  from: string;
+  to?: string;
+  value?: string;
+  gasPrice?: string;
+  gasUsed?: string;
+}
+
+interface RPCBlock {
+  number: string;
+  timestamp: string;
+  transactions: RPCTransaction[];
+}
+
+
 export interface PortfolioData {
   address: string
   balance: number
@@ -886,71 +902,73 @@ export class CitreaAPI {
   }
 
   // MAJOR PERFORMANCE FIX: Allow configurable block scanning range
-  private async getTransactionsFromRPC(address: string, limit: number, blocksToScan: number = 50): Promise<Transaction[]> {
-    const transactions: Transaction[] = []
-    const lowerAddress = address.toLowerCase()
+private async getTransactionsFromRPC(address: string, limit: number, blocksToScan: number = 50): Promise<Transaction[]> {
+  const transactions: Transaction[] = []
+  const lowerAddress = address.toLowerCase()
+  
+  try {
+    console.log(`RPC Scan: Scanning ${blocksToScan} blocks for address ${address}`);
+    const latestBlock = await this.makeRPCCall('eth_blockNumber', [])
+    const latestBlockNumber = parseInt(latestBlock as string, 16)
     
-    try {
-      console.log(`RPC Scan: Scanning ${blocksToScan} blocks for address ${address}`);
-      const latestBlock = await this.makeRPCCall('eth_blockNumber', [])
-      const latestBlockNumber = parseInt(latestBlock as string, 16)
-      
-      // Use configurable block scan range
-      const actualBlocksToScan = Math.min(blocksToScan, latestBlockNumber);
-      console.log(`RPC Scan: Latest block is ${latestBlockNumber}, scanning ${actualBlocksToScan} blocks`);
-      
-      const blockPromises: Promise<any>[] = []
+    // Use configurable block scan range
+    const actualBlocksToScan = Math.min(blocksToScan, latestBlockNumber);
+    console.log(`RPC Scan: Latest block is ${latestBlockNumber}, scanning ${actualBlocksToScan} blocks`);
+    
+    const blockPromises: Promise<RPCBlock | null>[] = []
 
-      // Batch block requests
-      for (let i = 0; i < blocksToScan && i < latestBlockNumber; i++) {
-        const blockNumber = latestBlockNumber - i
-        const blockNumberHex = `0x${blockNumber.toString(16)}`
-        blockPromises.push(
-          this.makeRPCCall('eth_getBlockByNumber', [blockNumberHex, true])
-            .catch(() => null)
-        )
-      }
+    // Batch block requests
+    for (let i = 0; i < blocksToScan && i < latestBlockNumber; i++) {
+      const blockNumber = latestBlockNumber - i
+      const blockNumberHex = `0x${blockNumber.toString(16)}`
+      blockPromises.push(
+        this.makeRPCCall('eth_getBlockByNumber', [blockNumberHex, true])
+          .then(result => result as RPCBlock)
+          .catch(() => null)
+      )
+    }
 
-      const blocks = await Promise.allSettled(blockPromises)
-      
-      for (const blockResult of blocks) {
-        if (blockResult.status === 'fulfilled' && blockResult.value) {
-          const block = blockResult.value
-          if (block && block.transactions) {
-            const relevantTxs = block.transactions
-              .filter((tx: any) => 
-                tx.from?.toLowerCase() === lowerAddress || 
-                tx.to?.toLowerCase() === lowerAddress
-              )
-              .slice(0, limit - transactions.length)
+    const blocks = await Promise.allSettled(blockPromises)
+    
+    for (const blockResult of blocks) {
+      if (blockResult.status === 'fulfilled' && blockResult.value) {
+        const block = blockResult.value
+        if (block && block.transactions) {
+          const relevantTxs = block.transactions
+            .filter((tx: RPCTransaction) => 
+              tx.from?.toLowerCase() === lowerAddress || 
+              tx.to?.toLowerCase() === lowerAddress
+            )
+            .slice(0, limit - transactions.length)
 
-            for (const tx of relevantTxs) {
-              transactions.push({
-                hash: tx.hash,
-                from: tx.from,
-                to: tx.to || '',
-                value: tx.value,
-                valueFormatted: parseInt(tx.value || '0', 16) / 1e18,
-                gasPrice: tx.gasPrice,
-                blockNumber: parseInt(block.number, 16),
-                timestamp: parseInt(block.timestamp, 16),
-                type: tx.from.toLowerCase() === lowerAddress ? 'sent' : 'received'
-              })
+          for (const tx of relevantTxs) {
+            transactions.push({
+              hash: tx.hash,
+              from: tx.from,
+              to: tx.to || '',
+              value: tx.value || '0',
+              valueFormatted: parseInt(tx.value || '0', 16) / 1e18,
+              gasPrice: tx.gasPrice || '0',
+              gasUsed: tx.gasUsed,
+              blockNumber: parseInt(block.number, 16),
+              timestamp: parseInt(block.timestamp, 16),
+              type: tx.from.toLowerCase() === lowerAddress ? 'sent' : 'received'
+            })
 
-              if (transactions.length >= limit) break
-            }
+            if (transactions.length >= limit) break
           }
         }
-        if (transactions.length >= limit) break
       }
-    } catch (error) {
-      console.error('RPC transaction scan error:', error)
+      if (transactions.length >= limit) break
     }
-    
-    return transactions
-      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-      .slice(0, limit)
+  } catch (error) {
+    console.error('RPC transaction scan error:', error)
   }
+  
+  return transactions
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+    .slice(0, limit)
+}
 
   // PERFORMANCE FIX: Set aggressive timeouts and use Promise.allSettled
   async getPortfolioData(address: string): Promise<PortfolioData> {
