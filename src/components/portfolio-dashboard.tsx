@@ -147,8 +147,8 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="grid lg:grid-cols-[280px_1fr]">
-        {/* Hamburger Menu with Sidebar */}
+      <div className="lg:grid lg:grid-cols-[280px_1fr]">
+        {/* Hamburger Menu with Sidebar - handles both desktop and mobile */}
         <HamburgerMenu>
           <Sidebar 
             walletAddress={walletAddress} 
@@ -157,15 +157,15 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
         </HamburgerMenu>
 
         {/* Main Content */}
-        <main className="p-6 lg:p-6 pt-20 lg:pt-6 pr-20 lg:pr-6">{/* Add top padding on mobile for hamburger button and right padding for hamburger */}
+        <main className="p-6 pt-20 lg:pt-6">{/* Add top padding on mobile for fixed header */}
           <div className="mb-6 flex items-center justify-between">
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold">Portfolio Overview</h1>
+              <h1 className="text-3xl lg:text-4xl font-bold">Portfolio Overview</h1>
               <div className="flex items-center gap-2">
-                <div className="text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</div>
+                <div className="text-base lg:text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</div>
                 {error && (
-                  <div className="flex items-center gap-1 text-yellow-500 text-sm">
-                    <AlertCircle className="h-3 w-3" />
+                  <div className="flex items-center gap-1 text-yellow-500 text-base lg:text-sm">
+                    <AlertCircle className="h-4 w-4 lg:h-3 lg:w-3" />
                     <span>Using cached/mock data</span>
                   </div>
                 )}
@@ -175,9 +175,9 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
               onClick={handleRefresh}
               disabled={isRefreshing}
               variant="outline"
-              className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black bg-transparent disabled:opacity-50"
+              className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black bg-transparent disabled:opacity-50 text-base lg:text-sm px-4 py-2 lg:px-3 lg:py-1.5"
             >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-5 w-5 lg:h-4 lg:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
           </div>
@@ -186,10 +186,10 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
           {error && (
             <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
               <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <AlertCircle className="h-5 w-5 lg:h-4 lg:w-4 text-yellow-500" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-500">Portfolio data may be outdated</p>
-                  <p className="text-xs text-gray-400">{error}</p>
+                  <p className="text-base lg:text-sm font-medium text-yellow-500">Portfolio data may be outdated</p>
+                  <p className="text-sm lg:text-xs text-gray-400">{error}</p>
                 </div>
               </div>
             </div>
@@ -225,34 +225,45 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
 
           {/* Tabs for different views */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="bg-gray-900/50 border border-orange-500/20">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black"
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="defi" className="data-[state=active]:bg-orange-500 data-[state=active]:text-black">
-                DeFi Positions
-              </TabsTrigger>
-              <TabsTrigger value="yield" className="data-[state=active]:bg-orange-500 data-[state=active]:text-black">
-                Yield Farming
-              </TabsTrigger>
-              <TabsTrigger value="bridge" className="data-[state=active]:bg-orange-500 data-[state=active]:text-black">
-                Cross-Chain
-              </TabsTrigger>
-              <TabsTrigger
-                value="transactions"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black"
-              >
-                Transactions
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-base lg:text-sm whitespace-nowrap inline-flex min-w-full lg:min-w-0">
+                <TabsTrigger
+                  value="overview"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="defi" 
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                >
+                  DeFi
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="yield" 
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                >
+                  Yield
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="bridge" 
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                >
+                  Bridge
+                </TabsTrigger>
+                <TabsTrigger
+                  value="transactions"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                >
+                  Transactions
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="overview" className="space-y-6">
               <Card className="p-6 bg-gray-900/50 border-orange-500/20">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Portfolio Performance</h2>
+                  <h2 className="text-xl lg:text-lg font-semibold">Portfolio Performance</h2>
                 </div>
                 <StatsChart />
               </Card>

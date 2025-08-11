@@ -22,17 +22,36 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
 
   return (
     <>
-      {/* Mobile hamburger button */}
-      <div className="lg:hidden fixed top-4 right-4 z-50">
-        <Button
-          onClick={() => setIsOpen(!isOpen)}
-          variant="outline"
-          size="icon"
-          className="bg-gray-900/90 border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black backdrop-blur-sm"
-        >
-          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </Button>
+      {/* Mobile Header with Logo and Hamburger */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900/90 backdrop-blur-md border-b border-orange-500/20">
+        <div className="flex h-16 items-center justify-between px-6">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg"></div>
+            <span className="font-bold text-white text-lg">Prism</span>
+          </div>
+          
+          {/* Hamburger Button */}
+          <Button
+            onClick={() => setIsOpen(!isOpen)}
+            variant="outline"
+            size="icon"
+            className="bg-transparent border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black h-10 w-10"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
+
+      {/* Desktop Sidebar - Always visible */}
+      <aside
+        className={cn(
+          "hidden lg:flex lg:flex-col border-r border-orange-500/20 bg-gray-900/50 backdrop-blur",
+          className
+        )}
+      >
+        {childrenWithProps}
+      </aside>
 
       {/* Mobile overlay */}
       {isOpen && (
@@ -42,17 +61,11 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Mobile Sidebar - Slides from right */}
       <aside
         className={cn(
-          // Base styles
-          "border-r border-orange-500/20 bg-gray-900/50 backdrop-blur flex flex-col",
-          // Desktop styles
-          "lg:relative lg:translate-x-0",
-          // Mobile styles
-          "lg:block fixed inset-y-0 left-0 z-40 w-80 transform transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          className
+          "lg:hidden fixed inset-y-0 right-0 z-50 w-80 transform transition-transform duration-300 ease-in-out bg-gray-900/95 backdrop-blur-md border-l border-orange-500/20 flex flex-col",
+          isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         {childrenWithProps}

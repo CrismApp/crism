@@ -136,37 +136,37 @@ export function Marketplace() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
+    <div className="min-h-screen bg-black text-white p-6 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">DeFi Marketplace</h1>
-          <p className="text-gray-400">Discover and invest in the best DeFi protocols on Citrea</p>
+          <h1 className="text-4xl lg:text-3xl font-bold mb-2">DeFi Marketplace</h1>
+          <p className="text-lg lg:text-base text-gray-400">Discover and invest in the best DeFi protocols on Citrea</p>
         </div>
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 lg:h-4 lg:w-4 text-gray-400" />
             <Input
               placeholder="Search protocols..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-900/50 border-orange-500/20"
+              className="pl-10 bg-gray-900/50 border-orange-500/20 text-base lg:text-sm h-12 lg:h-10"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (
               <Button
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 onClick={() => setSelectedCategory(category)}
-                className={
+                className={`text-base lg:text-sm px-4 py-2 lg:px-3 lg:py-1.5 whitespace-nowrap ${
                   selectedCategory === category
                     ? "bg-orange-500 hover:bg-orange-600"
                     : "border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black"
-                }
+                }`}
               >
                 {category}
               </Button>
@@ -175,20 +175,28 @@ export function Marketplace() {
         </div>
 
         <Tabs defaultValue="protocols" className="space-y-6">
-          <TabsList className="bg-gray-900/50 border border-orange-500/20">
-            <TabsTrigger value="protocols" className="data-[state=active]:bg-orange-500 data-[state=active]:text-black">
-              All Protocols
-            </TabsTrigger>
-            <TabsTrigger
-              value="opportunities"
-              className="data-[state=active]:bg-orange-500 data-[state=active]:text-black"
-            >
-              Hot Opportunities
-            </TabsTrigger>
-            <TabsTrigger value="trending" className="data-[state=active]:bg-orange-500 data-[state=active]:text-black">
-              Trending
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-base lg:text-sm whitespace-nowrap inline-flex min-w-full lg:min-w-0">
+              <TabsTrigger 
+                value="protocols" 
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+              >
+                All Protocols
+              </TabsTrigger>
+              <TabsTrigger
+                value="opportunities"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+              >
+                Hot Opportunities
+              </TabsTrigger>
+              <TabsTrigger 
+                value="trending" 
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+              >
+                Trending
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="protocols">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
