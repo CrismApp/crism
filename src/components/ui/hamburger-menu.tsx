@@ -17,7 +17,7 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
 
   // Clone children and pass the closeMenu function
   const childrenWithProps = isValidElement(children) 
-    ? cloneElement(children, { onNavigate: closeMenu } as any)
+    ? cloneElement(children, { onNavigate: closeMenu } as { onNavigate: () => void })
     : children
 
   return (
