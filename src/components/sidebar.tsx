@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, Wallet, ShoppingBag } from "lucide-react"
+import Image from "next/image"
 
 interface SidebarProps {
   walletAddress?: string
@@ -26,8 +27,8 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
     <>
       {/* Header */}
       <div className="flex h-16 items-center gap-2 border-b border-orange-500/20 px-6">
-        <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg"></div>
-        <span className="font-bold text-lg">Crism</span>
+        <Image src="/crism-logo.png" alt="CRISM Logo" width={32} height={32} className="h-8 w-8" />
+       
       </div>
 
       {/* Wallet Info - Only show if wallet is connected */}

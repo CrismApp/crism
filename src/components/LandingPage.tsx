@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ArrowRight, BarChart3, TrendingUp, Globe, Menu, X } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 
 interface LandingPageProps {
   onGetStarted: () => void
@@ -17,10 +18,9 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       {/* Header */}
       <header className="border-b border-orange-500/20 bg-black/50 backdrop-blur">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg"></div>
-            <span className="text-xl font-bold">CRISM</span>
-          </div>
+            <div className="flex items-center gap-2">
+            <Image src="/crism-logo.png" alt="CRISM Logo" width={32} height={32} className="h-8 w-8" />
+            </div>
           <nav className="hidden md:flex items-center gap-6 text-2xl">
             <a href="#features" className="text-gray-300 hover:text-orange-500 transition-colors">
               Features
