@@ -22,6 +22,21 @@ export interface Transaction {
   type?: 'sent' | 'received'
 }
 
+export interface EthTransaction {
+  hash: string
+  from: string
+  to: string | null
+  value: string
+  gasPrice: string
+  gas: string
+}
+
+export interface EthTransactionReceipt {
+  status: string
+  gasUsed: string
+  blockNumber: string
+}
+
 export interface PortfolioData {
   address: string
   balance: number
@@ -156,7 +171,11 @@ export class CitreaAPI {
             null,
             null
           ]
-        }]) as any[]
+        }]) as Array<{
+          topics?: string[]
+          transactionHash: string
+          blockNumber: string
+        }>
 
         console.log(`Found ${logs.length} log entries`)
 
@@ -212,7 +231,7 @@ export class CitreaAPI {
             ])
             
             if (!tx || !receipt) return null
-            return this.processTransaction(tx as any, receipt as any, userAddress)
+            return this.processTransaction(tx as EthTransaction, receipt as EthTransactionReceipt, userAddress)
           } catch (error) {
             console.error(`Error fetching tx ${hash}:`, error)
             return null
@@ -236,11 +255,9 @@ export class CitreaAPI {
   }
 
   // Process individual transaction correctly
-  private processTransaction(tx: any, receipt: any, userAddress: string): Transaction {
+  private processTransaction(tx: EthTransaction, receipt: EthTransactionReceipt, userAddress: string): Transaction {
     const isSent = tx.from.toLowerCase() === userAddress.toLowerCase()
     const value = parseInt(tx.value || '0', 16)
-    const gasUsed = parseInt(receipt.gasUsed || '0', 16)
-    const gasPrice = parseInt(tx.gasPrice || '0', 16)
 
     return {
       hash: tx.hash,
@@ -278,11 +295,15 @@ export class CitreaAPI {
           const block = await this.makeRPCCall('eth_getBlockByNumber', [
             '0x' + blockNum.toString(16), 
             true
-          ]) as any
+          ]) as {
+            number: string
+            timestamp: string
+            transactions: EthTransaction[]
+          }
 
           if (!block?.transactions) continue
 
-          const relevantTxs = block.transactions.filter((tx: any) =>
+          const relevantTxs = block.transactions.filter((tx: EthTransaction) =>
             tx.from?.toLowerCase() === address.toLowerCase() ||
             tx.to?.toLowerCase() === address.toLowerCase()
           )
@@ -327,14 +348,14 @@ export class CitreaAPI {
   }
 
   // Simplified token balance fetching
-  async getTokenBalances(address: string, tokenContracts: string[] = []): Promise<TokenBalance[]> {
+  async getTokenBalances(address: string): Promise<TokenBalance[]> {
     try {
       // Try explorer first
-      const explorerBalances = await this.getTokenBalancesFromExplorer(address)
+      const explorerBalances = await this.getTokenBalancesFromExplorer()
       if (explorerBalances.length > 0) {
         return explorerBalances.slice(0, 10) // Limit to prevent timeout
       }
-    } catch (error) {
+    } catch {
       console.log('Explorer failed, using RPC fallback')
     }
 
@@ -360,7 +381,7 @@ export class CitreaAPI {
     return balances
   }
 
-  private async getTokenBalancesFromExplorer(address: string): Promise<TokenBalance[]> {
+  private async getTokenBalancesFromExplorer(/* _address: string */): Promise<TokenBalance[]> {
     // This would connect to a block explorer API when available
     // For now return empty array
     return []
@@ -443,8 +464,8 @@ export class CitreaAPI {
       // Cache the result
       this.tokenInfoCache[cacheKey] = { ...tokenInfo, timestamp: Date.now() }
       return tokenInfo
-    } catch (error) {
-      console.error(`Token info fetch failed for ${tokenAddress}:`, error)
+    } catch {
+      console.error(`Token info fetch failed for ${tokenAddress}`)
       return null
     }
   }
@@ -474,7 +495,7 @@ export class CitreaAPI {
       }
       
       return str.trim()
-    } catch (error) {
+    } catch {
       return ''
     }
   }
@@ -488,7 +509,7 @@ export class CitreaAPI {
       const [balanceData, transactions, tokens] = await Promise.all([
         this.getBalance(address),
         this.getTransactionHistory(address, 50),
-        this.getTokenBalances(address, [])
+        this.getTokenBalances(address)
       ])
 
       // Calculate total portfolio value

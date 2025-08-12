@@ -16,7 +16,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg"></div>
-            <span className="text-xl font-bold">PRISM</span>
+            <span className="text-xl font-bold">CRISM</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-2xl">
             <a href="#features" className="text-gray-300 hover:text-orange-500 transition-colors">

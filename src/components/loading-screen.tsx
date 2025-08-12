@@ -40,7 +40,7 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
         </div>
 
         {/* Loading Text */}
-        <h2 className="text-2xl font-bold text-orange-500 mb-4">CitreaTracker</h2>
+        <h2 className="text-2xl font-bold text-orange-500 mb-4">CRISM</h2>
         <p className="text-orange-300 mb-6">Loading your Bitcoin L2 portfolio...</p>
 
         {/* Progress Bar */}

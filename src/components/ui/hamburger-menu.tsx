@@ -28,7 +28,7 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg"></div>
-            <span className="font-bold text-white text-lg">Prism</span>
+            <span className="font-bold text-white text-lg">Crism</span>
           </div>
           
           {/* Hamburger Button */}
