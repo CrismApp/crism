@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
     const balance = await citreaAPI.getBalance(walletAddress)
     
     return NextResponse.json(balance, {
-      headers: { 'Cache-Control': 'public, s-maxage=30' }
+      headers: { 
+        'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60',
+        'CDN-Cache-Control': 'public, s-maxage=15',
+        'Vercel-CDN-Cache-Control': 'public, s-maxage=15'
+      }
     })
   } catch {
     return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 })

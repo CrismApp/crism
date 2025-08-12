@@ -1,8 +1,7 @@
-// File: app/api/citrea/portfolio/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { CitreaAPI, PortfolioData, Transaction as ImportedTransaction } from '@/lib/citrea-api'
 
-// Interface for transaction data
 interface Transaction {
   type: 'received' | 'sent'
   valueFormatted: number
@@ -13,7 +12,7 @@ interface Transaction {
   to?: string
 }
 
-// Interface for token data
+
 interface Token {
   symbol: string
   balanceFormatted: number
@@ -22,14 +21,14 @@ interface Token {
   decimals?: number
 }
 
-// Interface for the transformed portfolio response
+
 interface PortfolioResponse {
   // Core wallet data
   address: string
   totalBalance: number
   totalBalanceUSD: number
   
-  // Portfolio metrics (matching your frontend component)
+  
   totalDeposits: number
   accruedYield: number
   dailyChange: number
@@ -51,7 +50,7 @@ interface PortfolioResponse {
   }
 }
 
-// Interface for transformed transaction
+
 interface TransformedTransaction extends Transaction {
   valueUSD: number
   formattedValue: string
@@ -59,7 +58,7 @@ interface TransformedTransaction extends Transaction {
   status: string
 }
 
-// Interface for transformed token
+
 interface TransformedToken extends Token {
   valueUSD: number
   formattedBalance: string
@@ -120,7 +119,7 @@ export async function GET(request: NextRequest) {
       // Detailed data
       transactions: portfolioData.transactions.map(tx => ({
         ...tx,
-        type: tx.type || 'received', // Provide default value
+        type: tx.type || 'received',
         valueUSD: tx.valueFormatted * (portfolioData.balanceUSD / portfolioData.balance || 0),
         formattedValue: `${tx.valueFormatted.toFixed(6)} BTC`,
         age: Date.now() - (tx.timestamp || 0) * 1000,
@@ -128,7 +127,7 @@ export async function GET(request: NextRequest) {
       })),
       tokens: portfolioData.tokens.map(token => ({
         ...token,
-        symbol: token.symbol || 'UNKNOWN', // Provide default value
+        symbol: token.symbol || 'UNKNOWN',
         valueUSD: token.balanceUSD || 0,
         formattedBalance: `${token.balanceFormatted.toFixed(6)} ${token.symbol || 'UNKNOWN'}`,
         percentage: portfolioData.totalValue > 0 ? (token.balanceUSD || 0) / portfolioData.totalValue * 100 : 0

@@ -1,3 +1,5 @@
+import { getPriorityTokens, getTokenConfig } from './token-config'
+
 export interface TokenBalance {
   contract: string
   symbol?: string
@@ -121,7 +123,7 @@ export class CitreaAPI {
     const now = Date.now()
     const cached = this.priceCache[cacheKey]
 
-    if (cached && (now - cached.timestamp) < 300000) {
+    if (cached && (now - cached.timestamp) < 60000) { // Reduced to 1 minute cache
       return cached.price
     }
 
@@ -146,67 +148,29 @@ export class CitreaAPI {
     }
   }
 
-  // Get transaction history
+  // Get transaction history - OPTIMIZED FOR SPEED
   async getTransactionHistory(address: string, limit = 20): Promise<Transaction[]> {
     try {
-      console.log(`Getting transaction history for ${address}`)
+      console.log(`Getting transaction history for ${address} (optimized)`)
       
-      // Get current block number
+      // SPEED OPTIMIZATION: Scan only last 50 blocks for instant results
       const currentBlock = await this.makeRPCCall('eth_blockNumber', []) as string
       const currentBlockNum = parseInt(currentBlock, 16)
+      const fromBlock = Math.max(0, currentBlockNum - 50) // Only 50 blocks!
       
-      // CRITICAL FIX: Citrea has max block range of 1000
-      const maxBlockRange = 999 // Use 999 to be safe
-      const fromBlock = Math.max(0, currentBlockNum - maxBlockRange)
+      console.log(`Fast scan: blocks ${fromBlock} to ${currentBlockNum} (${currentBlockNum - fromBlock} blocks)`)
       
-      console.log(`Scanning blocks ${fromBlock} to ${currentBlockNum} (range: ${currentBlockNum - fromBlock})`)
+      // Try fast method first - scan recent blocks directly
+      const quickTransactions = await this.getRecentTransactionsFast(address, limit, fromBlock, currentBlockNum)
       
-      try {
-        // Try eth_getLogs with limited range first
-        const logs = await this.makeRPCCall('eth_getLogs', [{
-          fromBlock: '0x' + fromBlock.toString(16),
-          toBlock: 'latest',
-          topics: [
-            '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', // Transfer event
-            null,
-            null
-          ]
-        }]) as Array<{
-          topics?: string[]
-          transactionHash: string
-          blockNumber: string
-        }>
-
-        console.log(`Found ${logs.length} log entries`)
-
-        // Get unique transaction hashes involving our address
-        const relevantLogs = logs.filter(log => {
-          if (!log.topics || log.topics.length < 3) return false
-          const from = '0x' + log.topics[1]?.slice(-40)
-          const to = '0x' + log.topics[2]?.slice(-40)
-          return from.toLowerCase() === address.toLowerCase() || 
-                 to.toLowerCase() === address.toLowerCase()
-        })
-
-        const uniqueTxHashes = [...new Set(relevantLogs.map(log => log.transactionHash))]
-        console.log(`Found ${uniqueTxHashes.length} unique transactions`)
-
-        if (uniqueTxHashes.length > 0) {
-          // Process transactions in smaller batches
-          const transactions = await this.processTransactionBatch(uniqueTxHashes.slice(0, limit), address, limit)
-          
-          if (transactions.length > 0) {
-            console.log(`Processed ${transactions.length} transactions via logs`)
-            return transactions.sort((a, b) => b.blockNumber - a.blockNumber).slice(0, limit)
-          }
-        }
-      } catch (logsError) {
-        console.error('eth_getLogs failed:', logsError)
+      if (quickTransactions.length > 0) {
+        console.log(`Fast method found ${quickTransactions.length} transactions`)
+        return quickTransactions
       }
       
-      // Fallback to direct block scanning
-      console.log('Falling back to direct block scanning')
-      return this.getTransactionsByDirectScan(address, limit)
+      // If no recent transactions, return empty array (for speed)
+      console.log('No recent transactions found')
+      return []
       
     } catch (error) {
       console.error('Transaction history error:', error)
@@ -214,175 +178,109 @@ export class CitreaAPI {
     }
   }
 
-  // Process transactions in batches to avoid overwhelming the RPC
-  private async processTransactionBatch(txHashes: string[], userAddress: string, maxCount: number): Promise<Transaction[]> {
+  // FAST method - scan only recent blocks
+  private async getRecentTransactionsFast(address: string, limit: number, fromBlock: number, toBlock: number): Promise<Transaction[]> {
     const transactions: Transaction[] = []
-    const batchSize = 5 // Small batches to be safe
+    const addressLower = address.toLowerCase()
     
-    for (let i = 0; i < txHashes.length && transactions.length < maxCount; i += batchSize) {
-      const batch = txHashes.slice(i, i + batchSize)
+    // Process only last 20 blocks for instant results
+    const blocksToCheck = Math.min(20, toBlock - fromBlock)
+    
+    for (let i = 0; i < blocksToCheck && transactions.length < limit; i++) {
+      const blockNum = toBlock - i
       
       try {
-        const batchPromises = batch.map(async (hash) => {
-          try {
-            const [tx, receipt] = await Promise.all([
-              this.makeRPCCall('eth_getTransactionByHash', [hash]),
-              this.makeRPCCall('eth_getTransactionReceipt', [hash])
-            ])
-            
-            if (!tx || !receipt) return null
-            return this.processTransaction(tx as EthTransaction, receipt as EthTransactionReceipt, userAddress)
-          } catch (error) {
-            console.error(`Error fetching tx ${hash}:`, error)
-            return null
-          }
-        })
-
-        const batchResults = await Promise.all(batchPromises)
-        const validTransactions = batchResults.filter(tx => tx !== null) as Transaction[]
-        transactions.push(...validTransactions)
-        
-        // Small delay between batches
-        if (i + batchSize < txHashes.length && transactions.length < maxCount) {
-          await new Promise(resolve => setTimeout(resolve, 200))
+        const block = await this.makeRPCCall('eth_getBlockByNumber', [
+          '0x' + blockNum.toString(16), 
+          true
+        ]) as {
+          number: string
+          timestamp: string
+          transactions: EthTransaction[]
         }
-      } catch (batchError) {
-        console.error(`Batch processing error:`, batchError)
+
+        if (!block?.transactions) continue
+
+        // Filter transactions involving our address
+        const relevantTxs = block.transactions.filter((tx: EthTransaction) =>
+          tx.from?.toLowerCase() === addressLower ||
+          tx.to?.toLowerCase() === addressLower
+        )
+
+        // Process relevant transactions
+        for (const tx of relevantTxs) {
+          if (transactions.length >= limit) break
+          
+          const isSent = tx.from.toLowerCase() === addressLower
+          const value = parseInt(tx.value || '0', 16)
+
+          transactions.push({
+            hash: tx.hash,
+            from: tx.from,
+            to: tx.to || '',
+            value: tx.value || '0',
+            valueFormatted: value / 1e18,
+            gasPrice: tx.gasPrice || '0',
+            gasUsed: tx.gas,
+            blockNumber: parseInt(block.number, 16),
+            timestamp: parseInt(block.timestamp, 16),
+            status: 'success',
+            type: isSent ? 'sent' : 'received'
+          })
+        }
+        
+      } catch (blockError) {
+        console.error(`Error scanning block ${blockNum}:`, blockError)
+        continue // Skip failed blocks
       }
     }
 
-    return transactions
+    return transactions.sort((a, b) => b.blockNumber - a.blockNumber)
   }
 
-  // Process individual transaction correctly
-  private processTransaction(tx: EthTransaction, receipt: EthTransactionReceipt, userAddress: string): Transaction {
-    const isSent = tx.from.toLowerCase() === userAddress.toLowerCase()
-    const value = parseInt(tx.value || '0', 16)
-
-    return {
-      hash: tx.hash,
-      from: tx.from,
-      to: tx.to || '',
-      value: tx.value || '0',
-      valueFormatted: value / 1e18,
-      gasPrice: tx.gasPrice || '0',
-      gasUsed: receipt.gasUsed,
-      blockNumber: parseInt(receipt.blockNumber, 16),
-      timestamp: undefined, // Will be filled later if needed
-      status: parseInt(receipt.status, 16) === 1 ? 'success' : 'failed',
-      type: isSent ? 'sent' : 'received'
-    }
-  }
-
-  // Simplified direct block scanning with smaller range
-  private async getTransactionsByDirectScan(address: string, limit: number): Promise<Transaction[]> {
-    console.log('Using direct block scan fallback')
-    
+  // Process transactions in batches to avoid overwhelming the RPC
+  // Simplified token balance fetching - OPTIMIZED
+  async getTokenBalances(address: string): Promise<TokenBalance[]> {
     try {
-      const currentBlock = await this.makeRPCCall('eth_blockNumber', []) as string
-      const currentBlockNum = parseInt(currentBlock, 16)
-      const transactions: Transaction[] = []
+      // Check priority tokens for speed
+      const priorityTokens = [
+       '0xb669dC8cC6D044307Ba45366C0c836eC3c7e31AA', // USD Coin (USDC)
+        '0x2252998B8281ba168Ab11b620b562035dC34EAE0', // Uniswap V2 (UNI-V2)
+        '0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93', // Wrapped Citrea Bitcoin (WCBTC)
+        '0xdE4251dd68e1aD5865b14Dd527E54018767Af58a', // SUMA (SUMA)
+        '0x36c16eaC6B0Ba6c50f494914ff015fCa95B7835F', // USDC (USDC)
+        '0x9B28B690550522608890C3C7e63c0b4A7eBab9AA', // Nectra USD (NUSD)
+        '0x9FEE47Bf6A2Bf54A9cE38caFF94bb50adCa4710e', // USD (USD)
+        '0xcfb6737893A18D10936bc622BCe04fc7f50776a0', // Nectra Position (NTP)
+        '0x4126E0f88008610d6E6C3059d93e9814c20139cB', // WETH (WETH)
+        '0x69D57B9D705eaD73a5d2f2476C30c55bD755cc2F', // Algebra Positions NFT-V2 (ALGB-POS)
+       
+      ]
+
+      const balances: TokenBalance[] = []
       
-      // MUCH smaller range to avoid timeouts - only scan last 200 blocks
-      const blocksToScan = Math.min(200, currentBlockNum)
-      
-      console.log(`Direct scan: checking last ${blocksToScan} blocks`)
-      
-      for (let i = 0; i < blocksToScan && transactions.length < limit; i++) {
-        const blockNum = currentBlockNum - i
-        
+      // Process tokens in parallel for speed
+      const tokenPromises = priorityTokens.map(async (tokenAddress) => {
         try {
-          const block = await this.makeRPCCall('eth_getBlockByNumber', [
-            '0x' + blockNum.toString(16), 
-            true
-          ]) as {
-            number: string
-            timestamp: string
-            transactions: EthTransaction[]
-          }
-
-          if (!block?.transactions) continue
-
-          const relevantTxs = block.transactions.filter((tx: EthTransaction) =>
-            tx.from?.toLowerCase() === address.toLowerCase() ||
-            tx.to?.toLowerCase() === address.toLowerCase()
-          )
-
-          for (const tx of relevantTxs) {
-            const isSent = tx.from.toLowerCase() === address.toLowerCase()
-            const value = parseInt(tx.value || '0', 16)
-
-            transactions.push({
-              hash: tx.hash,
-              from: tx.from,
-              to: tx.to || '',
-              value: tx.value || '0',
-              valueFormatted: value / 1e18,
-              gasPrice: tx.gasPrice || '0',
-              gasUsed: tx.gas,
-              blockNumber: parseInt(block.number, 16),
-              timestamp: parseInt(block.timestamp, 16),
-              status: 'success',
-              type: isSent ? 'sent' : 'received'
-            })
-
-            if (transactions.length >= limit) break
-          }
-        } catch (blockError) {
-          console.error(`Error scanning block ${blockNum}:`, blockError)
+          return await this.getTokenBalance(address, tokenAddress)
+        } catch {
+          return null // Skip failed tokens
         }
-        
-        // Add small delay every 10 blocks to be nice to RPC
-        if (i > 0 && i % 10 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-        }
-      }
-
-      console.log(`Direct scan found ${transactions.length} transactions`)
-      return transactions.sort((a, b) => b.blockNumber - a.blockNumber)
+      })
       
+      const results = await Promise.all(tokenPromises)
+      balances.push(...results.filter(balance => balance !== null) as TokenBalance[])
+
+      return balances
     } catch (error) {
-      console.error('Direct scan error:', error)
+      console.error('Token balance fetch error:', error)
       return []
     }
   }
 
-  // Simplified token balance fetching
-  async getTokenBalances(address: string): Promise<TokenBalance[]> {
-    try {
-      // Try explorer first
-      const explorerBalances = await this.getTokenBalancesFromExplorer()
-      if (explorerBalances.length > 0) {
-        return explorerBalances.slice(0, 10) // Limit to prevent timeout
-      }
-    } catch {
-      console.log('Explorer failed, using RPC fallback')
-    }
-
-    // Fallback: Check only essential tokens
-    const priorityTokens = [
-      '0xb669dC8cC6D044307Ba45366C0c836eC3c7e31AA', // USDC
-      '0x4126E0f88008610d6E6C3059d93e9814c20139cB', // WETH
-      '0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93', // WCBTC
-    ]
-
-    const balances: TokenBalance[] = []
-    for (const tokenAddress of priorityTokens.slice(0, 5)) {
-      try {
-        const balance = await this.getTokenBalance(address, tokenAddress)
-        if (balance) {
-          balances.push(balance)
-        }
-      } catch (error) {
-        console.error(`Error fetching balance for token ${tokenAddress}:`, error)
-      }
-    }
-
-    return balances
-  }
-
   private async getTokenBalancesFromExplorer(/* _address: string */): Promise<TokenBalance[]> {
-    // This would connect to a block explorer API when available
+    //HEY SAM CHECK THIS!!!
+    // This is supposed to connect to a block explorer API when available
     // For now return empty array
     return []
   }

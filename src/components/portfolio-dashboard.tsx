@@ -6,11 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { MetricsCard } from "@/components/metrics-card"
 import { StatsChart } from "@/components/stats-chart"
-import { VaultTable } from "@/components/vault-table"
 import { TransactionHistory } from "@/components/transaction-history"
 import { DeFiPositions } from "@/components/defi-positions"
 import { YieldFarming } from "@/components/yield-farming"
 import { CrossChainBridge } from "@/components/cross-chain-bridge"
+import { TokenList } from "@/components/token-list"
+import { AddTokenComponent } from "@/components/add-token"
 import { HamburgerMenu } from "@/components/ui/hamburger-menu"
 import { Sidebar } from "@/components/sidebar"
 import { RefreshCw, AlertCircle } from "lucide-react"
@@ -31,6 +32,18 @@ interface Transaction {
   type?: 'sent' | 'received'
 }
 
+// Token interface
+interface Token {
+  symbol: string
+  balanceFormatted: number
+  balanceUSD?: number
+  address?: string
+  decimals?: number
+  valueUSD: number
+  formattedBalance: string
+  percentage: number
+}
+
 // Portfolio data interface
 interface PortfolioData {
   totalBalance: number
@@ -41,11 +54,12 @@ interface PortfolioData {
   positions: number
   activeYields: number
   transactions: Transaction[]
-  tokens: unknown[]
+  tokens: Token[]
   balance: number
   balanceUSD: number
   totalValue: number
   transactionCount: number
+  nativeBalance?: number
 }
 
 interface PortfolioDashboardProps {
@@ -59,6 +73,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [activeTab, setActiveTab] = useState("overview")
   const portfolioAPI = useMemo(() => new PortfolioAPI(), [])
 
   // Basic fallback data (without mock transactions)
@@ -199,7 +214,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
           <div className="grid gap-4 md:grid-cols-4 mb-6">
             <MetricsCard
               title="Total Balance"
-              value={`${displayData.totalBalance} BTC`}
+              value={`${displayData.totalBalance} CBTC`}
               change={{
                 value: `$${displayData.totalBalanceUSD?.toLocaleString() || '0'}`,
                 percentage: `${displayData.dailyChange || 0}%`,
@@ -209,12 +224,12 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
             <MetricsCard
               title="Total Deposits"
               value={`$${displayData.totalDeposits?.toLocaleString() || '0'}`}
-              change={{ value: "$1,340", percentage: "+13.2%", isPositive: true }}
+              change={{ value: "coming soon", percentage: "+13.2%", isPositive: true }}
             />
             <MetricsCard
               title="Accrued Yield"
               value={`$${displayData.accruedYield?.toLocaleString() || '0'}`}
-              change={{ value: "$1,340", percentage: "+1.2%", isPositive: true }}
+              change={{ value: "coming soon", percentage: "+1.2%", isPositive: true }}
             />
             <MetricsCard
               title="Active Positions"
@@ -224,7 +239,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
           </div>
 
           {/* Tabs for different views */}
-          <Tabs defaultValue="overview" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="overflow-x-auto">
               <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-base lg:text-sm whitespace-nowrap inline-flex min-w-full lg:min-w-0">
                 <TabsTrigger
@@ -257,6 +272,12 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 >
                   Transactions
                 </TabsTrigger>
+                <TabsTrigger
+                  value="tokens"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                >
+                  Add Tokens
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -267,7 +288,18 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 </div>
                 <StatsChart />
               </Card>
-              <VaultTable />
+              
+              <TokenList 
+                tokens={displayData.tokens || []}
+                nativeBalance={displayData.nativeBalance || displayData.balance}
+                totalBalanceUSD={displayData.totalBalanceUSD}
+                onAddTokenClick={() => {
+                  // Switch to the tokens tab
+                  setActiveTab("tokens")
+                }}
+              />
+              
+             
             </TabsContent>
 
             <TabsContent value="defi">
@@ -287,6 +319,16 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 walletAddress={walletAddress}
                 transactions={displayData.transactions || []}
                 isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="tokens">
+              <AddTokenComponent 
+                onTokenAdded={(token) => {
+                  console.log('Token added:', token)
+                  // Optionally refresh portfolio data when a token is added
+                  handleRefresh()
+                }}
               />
             </TabsContent>
           </Tabs>
