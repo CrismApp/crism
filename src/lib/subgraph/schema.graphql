@@ -1,0 +1,178 @@
+type User @entity {
+  id: ID! # wallet address (lowercase)
+  address: Bytes! # wallet address as bytes
+  totalValue: BigDecimal! # total portfolio value in USD
+  ethBalance: BigDecimal! # ETH balance 
+  ethBalanceUSD: BigDecimal! # ETH balance in USD
+  transactionCount: BigInt! # total number of transactions
+  tokenCount: BigInt! # number of unique tokens held
+  firstSeenBlock: BigInt! # first block where this user appeared
+  lastSeenBlock: BigInt! # last block where this user was active
+  lastUpdated: BigInt! # timestamp of last update
+  
+  # Relations
+  transactions: [Transaction!]! @derivedFrom(field: "user")
+  tokenBalances: [TokenBalance!]! @derivedFrom(field: "user")
+  transfersFrom: [Transfer!]! @derivedFrom(field: "from")
+  transfersTo: [Transfer!]! @derivedFrom(field: "to")
+}
+
+type Token @entity {
+  id: ID! # token contract address (lowercase)
+  address: Bytes! # token contract address
+  name: String! # token name
+  symbol: String! # token symbol  
+  decimals: Int! # token decimals
+  totalSupply: BigDecimal # total supply if available
+  priceUSD: BigDecimal! # current price in USD
+  volume24h: BigDecimal! # 24h volume
+  holderCount: BigInt! # number of unique holders
+  transferCount: BigInt! # total transfers
+  firstSeenBlock: BigInt! # first block where token appeared
+  lastUpdated: BigInt! # timestamp of last update
+  
+  # Relations
+  balances: [TokenBalance!]! @derivedFrom(field: "token")
+  transfers: [Transfer!]! @derivedFrom(field: "token")
+  transactions: [Transaction!]! @derivedFrom(field: "token")
+}
+
+type TokenBalance @entity {
+  id: ID! # user-token combination: {userAddress}-{tokenAddress}
+  user: User!
+  token: Token!
+  balance: BigDecimal! # current balance
+  balanceUSD: BigDecimal! # balance in USD
+  lastUpdated: BigInt! # timestamp of last balance update
+  lastTransferBlock: BigInt! # block of last transfer affecting this balance
+}
+
+type Transaction @entity {
+  id: ID! # transaction hash
+  hash: Bytes! # transaction hash
+  user: User! # primary user (from or to)
+  from: User! # sender
+  to: User # receiver (can be null for contract creation)
+  token: Token # token involved (null for ETH transactions)
+  value: BigDecimal! # transaction value
+  valueUSD: BigDecimal! # value in USD at time of transaction
+  gasPrice: BigInt! # gas price
+  gasUsed: BigInt # gas used (from receipt)
+  gasLimit: BigInt! # gas limit
+  type: TransactionType! # sent, received, swap, etc.
+  status: TransactionStatus! # success, failed, pending
+  blockNumber: BigInt! # block number
+  blockIndex: BigInt! # transaction index in block
+  timestamp: BigInt! # block timestamp
+  
+  # Additional fields for DeFi tracking
+  methodId: Bytes # first 4 bytes of input data
+  contractInteraction: String # contract method name if known
+  
+  # Relations
+  transfers: [Transfer!]! @derivedFrom(field: "transaction")
+}
+
+type Transfer @entity {
+  id: ID! # transaction hash + log index
+  transaction: Transaction!
+  token: Token!
+  from: User!
+  to: User!
+  amount: BigDecimal! # transfer amount
+  amountUSD: BigDecimal! # amount in USD
+  blockNumber: BigInt!
+  timestamp: BigInt!
+  logIndex: BigInt! # event log index
+}
+
+type Block @entity {
+  id: ID! # block number
+  number: BigInt! # block number
+  hash: Bytes! # block hash
+  timestamp: BigInt! # block timestamp
+  gasUsed: BigInt! # total gas used
+  gasLimit: BigInt! # gas limit
+  transactionCount: BigInt! # number of transactions
+  
+  # Relations
+  transactions: [Transaction!]! @derivedFrom(field: "blockNumber")
+}
+
+# Portfolio snapshots for historical tracking
+type PortfolioSnapshot @entity {
+  id: ID! # user address + timestamp
+  user: User!
+  totalValue: BigDecimal! # total portfolio value
+  ethBalance: BigDecimal! # ETH balance
+  ethBalanceUSD: BigDecimal! # ETH value in USD
+  tokenCount: BigInt! # number of tokens
+  timestamp: BigInt! # snapshot timestamp
+  blockNumber: BigInt! # block number of snapshot
+  
+  # Token breakdown
+  tokenValues: [TokenValue!]! @derivedFrom(field: "snapshot")
+}
+
+type TokenValue @entity {
+  id: ID! # snapshot id + token address
+  snapshot: PortfolioSnapshot!
+  token: Token!
+  balance: BigDecimal!
+  balanceUSD: BigDecimal!
+  priceUSD: BigDecimal! # token price at snapshot time
+}
+
+# Daily aggregated data
+type DailyUserStats @entity {
+  id: ID! # user address + day timestamp
+  user: User!
+  date: BigInt! # start of day timestamp
+  transactionCount: BigInt! # transactions this day
+  volumeUSD: BigDecimal! # total volume in USD
+  gasSpent: BigDecimal! # total gas spent in ETH
+  portfolioValueStart: BigDecimal! # portfolio value at start of day
+  portfolioValueEnd: BigDecimal! # portfolio value at end of day
+  portfolioChange: BigDecimal! # percentage change
+}
+
+type DailyTokenStats @entity {
+  id: ID! # token address + day timestamp  
+  token: Token!
+  date: BigInt! # start of day timestamp
+  transferCount: BigInt! # number of transfers
+  volumeUSD: BigDecimal! # volume in USD
+  uniqueUsers: BigInt! # unique users interacting
+  priceOpen: BigDecimal! # opening price
+  priceClose: BigDecimal! # closing price
+  priceHigh: BigDecimal! # highest price
+  priceLow: BigDecimal! # lowest price
+}
+
+# System stats
+type GlobalStats @entity {
+  id: ID! # always "1"
+  totalUsers: BigInt! # total unique users
+  totalTokens: BigInt! # total unique tokens
+  totalTransactions: BigInt! # total transactions indexed
+  totalVolumeUSD: BigDecimal! # total volume in USD
+  lastUpdatedBlock: BigInt! # last processed block
+  lastUpdatedTimestamp: BigInt! # last update timestamp
+}
+
+enum TransactionType {
+  SENT
+  RECEIVED  
+  SWAP
+  DEPOSIT
+  WITHDRAWAL
+  CONTRACT_INTERACTION
+  MINT
+  BURN
+}
+
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}

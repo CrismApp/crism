@@ -1,0 +1,92 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+ 
+  - kind: ethereum
+    name: ERC20Template
+    network: citrea-testnet
+    source:
+      abi: ERC20
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mapping.ts
+      entities:
+        - User
+        - Token
+        - TokenBalance
+        - Transaction
+        - Transfer
+        - Block
+        - GlobalStats
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleERC20Transfer
+      blockHandlers:
+        - handler: handleBlock
+          filter:
+            kind: polling
+            every: 10
+  
+  
+  - kind: ethereum
+    name: EthereumTransactions
+    network: citrea-testnet
+    source:
+      abi: ERC20 
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mapping.ts
+      entities:
+        - User
+        - Transaction
+        - Block
+        - GlobalStats
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      blockHandlers:
+        - handler: handleEthTransactions
+          filter:
+            kind: polling
+            every: 1
+
+templates:
+
+  - kind: ethereum/contract
+    name: ERC20
+    network: citrea-testnet
+    source:
+      abi: ERC20
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mapping.ts
+      entities:
+        - Token
+        - TokenBalance
+        - Transfer
+        - User
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleERC20Transfer
+
+
+features:
+  - grafting
+  - ipfsOnEthereumContracts
+
+
+indexerHints:
+  prune: auto
