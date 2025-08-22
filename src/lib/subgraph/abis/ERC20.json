@@ -9,7 +9,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "symbol", 
+    "name": "symbol",
     "outputs": [{"name": "", "type": "string"}],
     "type": "function"
   },

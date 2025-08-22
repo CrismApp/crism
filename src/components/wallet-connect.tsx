@@ -52,7 +52,7 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: citreaTestnetConfig.chainId }]
           });
-        } catch (switchError) {
+        } catch {
           throw new Error('Failed to switch to Citrea Testnet');
         }
       }

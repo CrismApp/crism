@@ -106,33 +106,43 @@ export async function GET(request: NextRequest) {
     // Transform the data to match your frontend expectations
     const transformedData: PortfolioResponse = {
       address: portfolioData.address,
-      totalBalance: portfolioData.balance,
-      totalBalanceUSD: portfolioData.balanceUSD,
+      totalBalance: parseFloat(portfolioData.ethBalance),
+      totalBalanceUSD: portfolioData.ethBalanceUSD,
       
       // Calculate portfolio metrics
       totalDeposits: calculateTotalDeposits(portfolioData.transactions),
-      accruedYield: calculateAccruedYield(portfolioData.transactions, portfolioData.balance),
+      accruedYield: calculateAccruedYield(portfolioData.transactions, parseFloat(portfolioData.ethBalance)),
       dailyChange: calculateDailyChange(portfolioData.transactions),
-      positions: portfolioData.tokens.length + (portfolioData.balance > 0 ? 1 : 0), // Include native token
-      activeYields: calculateActiveYields(portfolioData.tokens as Token[]),
+      positions: portfolioData.tokens.length + (parseFloat(portfolioData.ethBalance) > 0 ? 1 : 0), // Include native token
+      activeYields: calculateActiveYields(portfolioData.tokens.map(tb => ({
+        symbol: tb.token.symbol,
+        balanceFormatted: parseFloat(tb.balance) / Math.pow(10, tb.token.decimals),
+        balanceUSD: tb.balanceUSD,
+        address: tb.token.address,
+        decimals: tb.token.decimals
+      }))),
       
       // Detailed data
       transactions: portfolioData.transactions.map(tx => ({
         ...tx,
-        type: tx.type || 'received',
-        valueUSD: tx.valueFormatted * (portfolioData.balanceUSD / portfolioData.balance || 0),
-        formattedValue: `${tx.valueFormatted.toFixed(6)} BTC`,
+        type: (tx.type === 'sent' || tx.type === 'received') ? tx.type : 'received',
+        valueUSD: tx.valueUSD || 0,
+        valueFormatted: parseFloat(tx.value) / 1e18,
+        formattedValue: `${(parseFloat(tx.value) / 1e18).toFixed(6)} BTC`,
         age: Date.now() - (tx.timestamp || 0) * 1000,
         status: 'completed' // Citrea transactions are final
       })),
-      tokens: portfolioData.tokens.map(token => ({
-        ...token,
-        symbol: token.symbol || 'UNKNOWN',
-        valueUSD: token.balanceUSD || 0,
-        formattedBalance: `${token.balanceFormatted.toFixed(6)} ${token.symbol || 'UNKNOWN'}`,
-        percentage: portfolioData.totalValue > 0 ? (token.balanceUSD || 0) / portfolioData.totalValue * 100 : 0
+      tokens: portfolioData.tokens.map(tokenBalance => ({
+        symbol: tokenBalance.token.symbol || 'UNKNOWN',
+        balanceFormatted: parseFloat(tokenBalance.balance) / Math.pow(10, tokenBalance.token.decimals),
+        balanceUSD: tokenBalance.balanceUSD || 0,
+        address: tokenBalance.token.address,
+        decimals: tokenBalance.token.decimals,
+        valueUSD: tokenBalance.balanceUSD || 0,
+        formattedBalance: `${(parseFloat(tokenBalance.balance) / Math.pow(10, tokenBalance.token.decimals)).toFixed(6)} ${tokenBalance.token.symbol || 'UNKNOWN'}`,
+        percentage: portfolioData.totalValueUSD > 0 ? (tokenBalance.balanceUSD || 0) / portfolioData.totalValueUSD * 100 : 0
       })),
-      nativeBalance: portfolioData.balance,
+      nativeBalance: parseFloat(portfolioData.ethBalance),
       
       // Metadata
       lastUpdated: new Date().toISOString(),
@@ -210,7 +220,7 @@ function calculateTotalDeposits(transactions: ImportedTransaction[]): number {
   // Calculate total incoming transactions (deposits)
   return transactions
     .filter(tx => tx.type === 'received')
-    .reduce((sum, tx) => sum + tx.valueFormatted, 0)
+    .reduce((sum, tx) => sum + (parseFloat(tx.value) / 1e18), 0)
 }
 
 function calculateAccruedYield(transactions: ImportedTransaction[], currentBalance: number): number {
@@ -218,7 +228,7 @@ function calculateAccruedYield(transactions: ImportedTransaction[], currentBalan
   const totalDeposits = calculateTotalDeposits(transactions)
   const totalWithdrawals = transactions
     .filter(tx => tx.type === 'sent')
-    .reduce((sum, tx) => sum + tx.valueFormatted, 0)
+    .reduce((sum, tx) => sum + (parseFloat(tx.value) / 1e18), 0)
   
   const accruedYield = currentBalance + totalWithdrawals - totalDeposits
   return Math.max(0, accruedYield) // Don't show negative yield
@@ -233,15 +243,15 @@ function calculateDailyChange(transactions: ImportedTransaction[]): number {
   
   if (recentTransactions.length === 0) return 0
   
-  const dailyVolume = recentTransactions.reduce((sum, tx) => sum + tx.valueFormatted, 0)
+  const dailyVolume = recentTransactions.reduce((sum, tx) => sum + (parseFloat(tx.value) / 1e18), 0)
   
   // Simple heuristic: positive change if more received than sent
   const received = recentTransactions
     .filter(tx => tx.type === 'received')
-    .reduce((sum, tx) => sum + tx.valueFormatted, 0)
+    .reduce((sum, tx) => sum + (parseFloat(tx.value) / 1e18), 0)
   const sent = recentTransactions
     .filter(tx => tx.type === 'sent')
-    .reduce((sum, tx) => sum + tx.valueFormatted, 0)
+    .reduce((sum, tx) => sum + (parseFloat(tx.value) / 1e18), 0)
     
   const netChange = received - sent
   

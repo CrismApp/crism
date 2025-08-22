@@ -11,6 +11,12 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [
+      "src/lib/subgraph/generated/**/*",
+      "src/lib/subgraph/build/**/*"
+    ]
+  }
 ];
 
 export default eslintConfig;
