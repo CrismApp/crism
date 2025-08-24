@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Image from "next/image"
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -66,8 +65,10 @@ export default function DocsPage() {
               </Button>
             </Link>
             <div className="flex items-center gap-2">
-                <Image src="/crism-logo.png" alt="CRISM Logo" width={32} height={32} className="h-8 w-8" />
-              <span className="text-lg font-bold">CRISM Docs</span>
+                <div className="h-8 w-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">C</span>
+                </div>
+              <span className="text-lg font-bold">Crism Docs</span>
             </div>
           </div>
           <Badge variant="outline" className="border-orange-500 text-orange-500">

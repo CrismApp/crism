@@ -11,7 +11,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         display: ['var(--font-vt323)', 'monospace'],
-        mono: ['var(--font-roboto-mono)', 'monospace'],
+        mono: ['"Roboto Mono"', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

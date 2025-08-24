@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowUpRight, ArrowDownLeft, Repeat, ExternalLink, Loader2 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { ArrowUpRight, ArrowDownLeft, Repeat, ExternalLink, Loader2, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
 
-// Import your transaction interface
+
 interface Transaction {
   hash: string
   from: string
@@ -19,7 +20,7 @@ interface Transaction {
   type?: 'sent' | 'received'
 }
 
-// Interface for processed transactions displayed in the UI
+
 interface ProcessedTransaction {
   hash: string
   type: string
@@ -39,6 +40,8 @@ interface TransactionHistoryProps {
   isLoading?: boolean
 }
 
+const TRANSACTIONS_PER_PAGE = 5
+
 export function TransactionHistory({ walletAddress, transactions, isLoading }: TransactionHistoryProps) {
   const [processedTransactions, setProcessedTransactions] = useState<ProcessedTransaction[]>([])
   const [transactionStats, setTransactionStats] = useState({
@@ -47,66 +50,10 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
     totalFees: 0,
     totalCount: 0
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-  // Process raw transaction data into display format
-  useEffect(() => {
-    console.log('TransactionHistory received props:', { walletAddress, transactions, isLoading })
-    console.log('Number of transactions:', transactions?.length)
-    
-    if (!transactions || transactions.length === 0) {
-      console.log('No transactions to process')
-      setProcessedTransactions([])
-      setTransactionStats({
-        totalSent: 0,
-        totalReceived: 0,
-        totalFees: 0,
-        totalCount: 0
-      })
-      return
-    }
-
-    let totalSent = 0
-    let totalReceived = 0
-    let totalFees = 0
-
-    const processed = transactions.map(tx => {
-      const isSent = tx.type === 'sent' || tx.from.toLowerCase() === walletAddress.toLowerCase()
-      const amount = tx.valueFormatted || 0
-      const gasUsed = tx.gasUsed ? parseInt(tx.gasUsed, 16) : 0
-      const gasPrice = tx.gasPrice ? parseInt(tx.gasPrice, 16) : 0
-      const fee = (gasUsed * gasPrice) / 1e18
-
-      // Update totals
-      if (isSent) {
-        totalSent += amount
-      } else {
-        totalReceived += amount
-      }
-      totalFees += fee
-
-      return {
-        hash: tx.hash,
-        type: isSent ? 'Send' : 'Receive',
-        amount: isSent ? `-${amount.toFixed(6)} BTC` : `+${amount.toFixed(6)} BTC`,
-        amountUSD: isSent ? `-$${(amount * 60000).toFixed(2)}` : `+$${(amount * 60000).toFixed(2)}`, // Using approximate BTC price
-        addressOrProtocol: isSent ? tx.to : tx.from,
-        status: tx.status === 'success' || !tx.status ? 'Confirmed' : 'Failed',
-        time: tx.timestamp ? formatTimeAgo(tx.timestamp * 1000) : 'Unknown',
-        fee: `${fee.toFixed(6)} BTC`,
-        block: tx.blockNumber.toString(),
-        isSent
-      }
-    })
-
-    setProcessedTransactions(processed)
-    setTransactionStats({
-      totalSent,
-      totalReceived,
-      totalFees,
-      totalCount: transactions.length
-    })
-  }, [transactions, walletAddress, isLoading])
-
+  // Utility functions defined before useMemo
   const formatTimeAgo = (timestamp: number): string => {
     const now = Date.now()
     const diff = now - timestamp
@@ -153,8 +100,110 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
   }
 
   const openExplorer = (hash: string) => {
-    // Open Citrea testnet explorer
+    
     window.open(`https://explorer.testnet.citrea.xyz/tx/${hash}`, '_blank')
+  }
+
+  // Memoize processed transactions to prevent unnecessary recalculations
+  const memoizedProcessedData = useMemo(() => {
+    console.log('TransactionHistory processing transactions:', { walletAddress, transactionsCount: transactions?.length, isLoading })
+    
+    if (!transactions || transactions.length === 0) {
+      console.log('No transactions to process')
+      return {
+        processed: [],
+        stats: {
+          totalSent: 0,
+          totalReceived: 0,
+          totalFees: 0,
+          totalCount: 0
+        }
+      }
+    }
+
+    let totalSent = 0
+    let totalReceived = 0
+    let totalFees = 0
+
+    const processed = transactions.map(tx => {
+      const isSent = tx.type === 'sent' || tx.from.toLowerCase() === walletAddress.toLowerCase()
+      const amount = tx.valueFormatted || 0
+      const gasUsed = tx.gasUsed ? parseInt(tx.gasUsed, 16) : 0
+      const gasPrice = tx.gasPrice ? parseInt(tx.gasPrice, 16) : 0
+      const fee = (gasUsed * gasPrice) / 1e18
+
+      // Debug: Log the actual status value
+      console.log('Transaction status debug:', { hash: tx.hash, status: tx.status, type: typeof tx.status })
+
+      // Update totals
+      if (isSent) {
+        totalSent += amount
+      } else {
+        totalReceived += amount
+      }
+      totalFees += fee
+
+      return {
+        hash: tx.hash,
+        type: isSent ? 'Send' : 'Receive',
+        amount: isSent ? `-${amount.toFixed(6)} BTC` : `+${amount.toFixed(6)} BTC`,
+        amountUSD: isSent ? `-$${(amount * 60000).toFixed(2)}` : `+$${(amount * 60000).toFixed(2)}`, // Using approximate BTC price
+        addressOrProtocol: isSent ? tx.to : tx.from,
+        status: (
+          tx.status === 'success' || 
+          tx.status === 'completed' || 
+          tx.status === 'confirmed' || 
+          !tx.status ||
+          (tx.hash && tx.blockNumber) // If transaction has hash and block number, it's confirmed
+        ) ? 'Confirmed' : 'Failed',
+        time: tx.timestamp ? formatTimeAgo(tx.timestamp * 1000) : 'Unknown',
+        fee: `${fee.toFixed(6)} BTC`,
+        block: tx.blockNumber.toString(),
+        isSent
+      }
+    })
+
+    return {
+      processed,
+      stats: {
+        totalSent,
+        totalReceived,
+        totalFees,
+        totalCount: transactions.length
+      }
+    }
+  }, [transactions, walletAddress, isLoading])
+
+  // Update state when memoized data changes
+  useEffect(() => {
+    setProcessedTransactions(memoizedProcessedData.processed)
+    setTransactionStats(memoizedProcessedData.stats)
+    setCurrentPage(1) // Reset to first page when data changes
+  }, [memoizedProcessedData])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(processedTransactions.length / TRANSACTIONS_PER_PAGE)
+  const startIndex = (currentPage - 1) * TRANSACTIONS_PER_PAGE
+  const endIndex = startIndex + TRANSACTIONS_PER_PAGE
+  const currentTransactions = processedTransactions.slice(startIndex, endIndex)
+
+  const handlePreviousPage = () => {
+    setCurrentPage(prev => Math.max(1, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(totalPages, prev + 1))
+  }
+
+  const toggleExpandedRow = (hash: string, index: number) => {
+    const uniqueKey = `${hash || 'unknown'}-${index}`
+    const newExpanded = new Set(expandedRows)
+    if (newExpanded.has(uniqueKey)) {
+      newExpanded.delete(uniqueKey)
+    } else {
+      newExpanded.add(uniqueKey)
+    }
+    setExpandedRows(newExpanded)
   }
 
   if (isLoading) {
@@ -173,64 +222,71 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
   return (
     <div className="space-y-6">
       {/* Transaction Statistics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowUpRight className="h-4 w-4 text-orange-500" />
-            <span className="text-sm text-gray-400">Total Sent</span>
+            <span className="text-xs sm:text-sm text-gray-400">Total Sent</span>
           </div>
-          <div className="text-2xl font-bold text-white">
-            {transactionStats.totalSent.toFixed(6)} BTC
+          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+            {transactionStats.totalSent.toFixed(4)} BTC
           </div>
-          <div className="text-sm text-red-400">
-            -${(transactionStats.totalSent * 60000).toFixed(2)}
+          <div className="text-xs sm:text-sm text-red-400">
+            -${(transactionStats.totalSent * 60000).toFixed(0)}
           </div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowDownLeft className="h-4 w-4 text-orange-500" />
-            <span className="text-sm text-gray-400">Total Received</span>
+            <span className="text-xs sm:text-sm text-gray-400">Total Received</span>
           </div>
-          <div className="text-2xl font-bold text-white">
-            {transactionStats.totalReceived.toFixed(6)} BTC
+          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+            {transactionStats.totalReceived.toFixed(4)} BTC
           </div>
-          <div className="text-sm text-green-400">
-            +${(transactionStats.totalReceived * 60000).toFixed(2)}
+          <div className="text-xs sm:text-sm text-green-400">
+            +${(transactionStats.totalReceived * 60000).toFixed(0)}
           </div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Repeat className="h-4 w-4 text-orange-500" />
-            <span className="text-sm text-gray-400">Total Fees</span>
+            <span className="text-xs sm:text-sm text-gray-400">Total Fees</span>
           </div>
-          <div className="text-2xl font-bold text-white">
+          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
             {transactionStats.totalFees.toFixed(6)} BTC
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-xs sm:text-sm text-gray-400">
             ${(transactionStats.totalFees * 60000).toFixed(2)}
           </div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ExternalLink className="h-4 w-4 text-orange-500" />
-            <span className="text-sm text-gray-400">Transactions</span>
+            <span className="text-xs sm:text-sm text-gray-400">Transactions</span>
           </div>
-          <div className="text-2xl font-bold text-white">{transactionStats.totalCount}</div>
-          <div className="text-sm text-gray-400">All time</div>
+          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{transactionStats.totalCount}</div>
+          <div className="text-xs sm:text-sm text-gray-400">All time</div>
         </Card>
       </div>
 
       {/* Transaction Table */}
       <Card className="bg-gray-900/50 border-orange-500/20">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold mb-2 sm:mb-0">Recent Transactions</h3>
+            {processedTransactions.length > 0 && (
+              <div className="text-sm text-gray-400">
+                Showing {Math.min(startIndex + 1, processedTransactions.length)} - {Math.min(endIndex, processedTransactions.length)} of {processedTransactions.length}
+              </div>
+            )}
+          </div>
           
           {processedTransactions.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-gray-400 mb-2">No transactions found</div>
+              <div className="text-gray-400 mb-2 text-base">No transactions found</div>
               <div className="text-sm text-gray-500">
                 Transactions will appear here once you start using your wallet on the Citrea network
               </div>
@@ -239,25 +295,106 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-orange-500/20">
-                    <TableHead>Hash</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Fee</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {processedTransactions.map((tx, index) => (
-                    <TableRow key={tx.hash || index} className="border-orange-500/10">
-                      <TableCell>
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-orange-500/20">
+                      <TableHead className="text-sm">Hash</TableHead>
+                      <TableHead className="text-sm">Type</TableHead>
+                      <TableHead className="text-sm">Amount</TableHead>
+                      <TableHead className="text-sm">Address</TableHead>
+                      <TableHead className="text-sm">Status</TableHead>
+                      <TableHead className="text-sm">Time</TableHead>
+                      <TableHead className="text-sm">Fee</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentTransactions.map((tx, index) => (
+                      <TableRow key={`table-${tx.hash || 'unknown'}-${index}`} className="border-orange-500/10">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-orange-500">
+                              {formatAddress(tx.hash)}
+                            </span>
+                            <ExternalLink 
+                              className="h-3 w-3 text-gray-400 cursor-pointer hover:text-orange-500 transition-colors" 
+                              onClick={() => openExplorer(tx.hash)}
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getTypeIcon(tx.type || 'Unknown')}
+                            <Badge className={getTypeColor(tx.type || 'Unknown')}>{tx.type || 'Unknown'}</Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className={`font-medium text-sm ${tx.isSent ? "text-red-400" : "text-green-400"}`}>
+                              {tx.amount}
+                            </div>
+                            <div className="text-xs text-gray-400">{tx.amountUSD}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {formatAddress(tx.addressOrProtocol)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            className={
+                              tx.status === 'Confirmed' 
+                                ? "bg-green-500/10 text-green-500"
+                                : "bg-red-500/10 text-red-500"
+                            }
+                          >
+                            {tx.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-400">{tx.time}</TableCell>
+                        <TableCell className="text-sm">{tx.fee}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {currentTransactions.map((tx, index) => (
+                  <div key={`mobile-${tx.hash || 'unknown'}-${index}`} className="p-4 bg-gray-800/50 rounded-lg border border-orange-500/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(tx.type || 'Unknown')}
+                        <Badge className={getTypeColor(tx.type || 'Unknown')}>{tx.type || 'Unknown'}</Badge>
+                      </div>
+                      <Badge 
+                        className={
+                          tx.status === 'Confirmed' 
+                            ? "bg-green-500/10 text-green-500"
+                            : "bg-red-500/10 text-red-500"
+                        }
+                      >
+                        {tx.status}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Amount</span>
+                        <div className="text-right">
+                          <div className={`font-medium text-sm ${tx.isSent ? "text-red-400" : "text-green-400"}`}>
+                            {tx.amount}
+                          </div>
+                          <div className="text-xs text-gray-400">{tx.amountUSD}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Hash</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm">
+                          <span className="font-mono text-sm text-orange-500">
                             {formatAddress(tx.hash)}
                           </span>
                           <ExternalLink 
@@ -265,46 +402,82 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
                             onClick={() => openExplorer(tx.hash)}
                           />
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getTypeIcon(tx.type || 'Unknown')}
-                          <Badge className={getTypeColor(tx.type || 'Unknown')}>{tx.type || 'Unknown'}</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div
-                            className={`font-medium ${
-                              tx.isSent ? "text-red-400" : "text-green-400"
-                            }`}
-                          >
-                            {tx.amount}
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Address</span>
+                        <span className="font-mono text-sm">{formatAddress(tx.addressOrProtocol)}</span>
+                      </div>
+                      
+                      <button
+                        onClick={() => toggleExpandedRow(tx.hash, index)}
+                        className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-400 transition-colors"
+                      >
+                        {expandedRows.has(`${tx.hash || 'unknown'}-${index}`) ? (
+                          <>
+                            <ChevronUp className="h-3 w-3" />
+                            Hide details
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="h-3 w-3" />
+                            Show details
+                          </>
+                        )}
+                      </button>
+                      
+                      {expandedRows.has(`${tx.hash || 'unknown'}-${index}`) && (
+                        <div className="pt-2 border-t border-orange-500/10 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-400">Time</span>
+                            <span className="text-sm">{tx.time}</span>
                           </div>
-                          <div className="text-xs text-gray-400">{tx.amountUSD}</div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-400">Fee</span>
+                            <span className="text-sm">{tx.fee}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-400">Block</span>
+                            <span className="text-sm">{tx.block}</span>
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {formatAddress(tx.addressOrProtocol)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          className={
-                            tx.status === 'Confirmed' 
-                              ? "bg-green-500/10 text-green-500"
-                              : "bg-red-500/10 text-red-500"
-                          }
-                        >
-                          {tx.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-400">{tx.time}</TableCell>
-                      <TableCell className="text-sm">{tx.fee}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-orange-500/10">
+                  <div className="text-sm text-gray-400">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </Card>

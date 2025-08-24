@@ -4,7 +4,6 @@ import { useState, cloneElement, isValidElement } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
 
 interface HamburgerMenuProps {
   children: React.ReactNode
@@ -28,8 +27,10 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
         <div className="flex h-16 items-center justify-between px-6">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <Image src="/crism-logo.png" alt="CRISM Logo" width={32} height={32} className="h-8 w-8" />
-         
+            <div className="h-8 w-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">C</span>
+            </div>
+            <span className="text-xl font-bold text-orange-500">Crism</span>
           </div>
           
           {/* Hamburger Button */}

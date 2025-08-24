@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -62,19 +62,33 @@ interface PortfolioData {
   nativeBalance?: number
 }
 
+// Cache interface for storing fetched data
+interface CachedData {
+  data: PortfolioData
+  timestamp: number
+  walletAddress: string
+}
+
 interface PortfolioDashboardProps {
   walletAddress: string
   onDisconnect: () => void
 }
 
+// Cache duration: 30 seconds
+const CACHE_DURATION = 30 * 1000
+
 export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDashboardProps) {
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [activeTab, setActiveTab] = useState("overview")
-  const portfolioAPI = useMemo(() => new PortfolioAPI(), [])
+  
+  // Use refs to persist data and API instance
+  const portfolioAPI = useRef(new PortfolioAPI())
+  const dataCache = useRef<CachedData | null>(null)
+  const isFetching = useRef(false)
 
   // Basic fallback data (without mock transactions)
   const mockData: PortfolioData = useMemo(() => ({
@@ -93,17 +107,54 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
     transactionCount: 0
   }), [])
 
-  const fetchPortfolioData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
+  // Check if cache is valid
+  const isCacheValid = useCallback((cache: CachedData | null) => {
+    if (!cache) return false
+    if (cache.walletAddress !== walletAddress) return false
+    const isExpired = Date.now() - cache.timestamp > CACHE_DURATION
+    return !isExpired
+  }, [walletAddress])
+
+  // Get cached data if valid
+  const getCachedData = useCallback(() => {
+    if (isCacheValid(dataCache.current)) {
+      return dataCache.current!.data
+    }
+    return null
+  }, [isCacheValid])
+
+  const fetchPortfolioData = useCallback(async (forceRefresh = false) => {
+    // Prevent multiple simultaneous fetches
+    if (isFetching.current && !forceRefresh) {
+      console.log('Fetch already in progress, skipping...')
+      return
+    }
+
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cachedData = getCachedData()
+      if (cachedData) {
+        console.log('Using cached portfolio data')
+        setPortfolioData(cachedData)
+        setIsInitialLoading(false)
+        setError(null)
+        return
+      }
+    }
+
+    // Set loading states
+    isFetching.current = true
+    if (forceRefresh) {
       setIsRefreshing(true)
-    } else {
-      setIsLoading(true)
+    } else if (!portfolioData) {
+      setIsInitialLoading(true)
     }
     setError(null)
 
     try {
       // Directly call the API without timeout
-      const data = await portfolioAPI.getPortfolioData(walletAddress)
+      console.log(`Fetching fresh portfolio data for ${walletAddress}`)
+      const data = await portfolioAPI.current.getPortfolioData(walletAddress)
       
       // Debug log to see the actual data structure
       console.log('Portfolio data received:', data)
@@ -111,12 +162,21 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
       
       // Validate transaction data
       if (!data.transactions || data.transactions.length === 0) {
-        console.warn("No transactions found in portfolio data");
+        console.warn("No transactions found in portfolio data")
+      }
+      
+      // Cache the data
+      dataCache.current = {
+        data,
+        timestamp: Date.now(),
+        walletAddress
       }
       
       setPortfolioData(data)
       setLastUpdated(new Date())
       setError(null)
+      
+      console.log('Portfolio data cached and set successfully')
     } catch (error) {
       console.error("Failed to fetch portfolio data:", error)
       
@@ -124,27 +184,44 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch portfolio data"
       setError(errorMessage)
       
-      // Use basic fallback data if no real data exists
-      if (!portfolioData) {
-        console.warn("Using fallback portfolio data due to fetch error.")
+      // Use cached data if available, otherwise fallback to mock data
+      const cachedData = dataCache.current?.walletAddress === walletAddress ? dataCache.current.data : null
+      if (cachedData) {
+        console.warn("Using stale cached data due to fetch error")
+        setPortfolioData(cachedData)
+      } else if (!portfolioData) {
+        console.warn("Using fallback portfolio data due to fetch error")
         setPortfolioData(mockData)
       }
     } finally {
-      setIsLoading(false)
+      setIsInitialLoading(false)
       setIsRefreshing(false)
+      isFetching.current = false
     }
-  }, [portfolioAPI, portfolioData, walletAddress, mockData])
+  }, [walletAddress, getCachedData, portfolioData, mockData])
 
+  // Clear cache when wallet address changes
+  useEffect(() => {
+    if (dataCache.current?.walletAddress !== walletAddress) {
+      console.log('Wallet address changed, clearing cache')
+      dataCache.current = null
+      setPortfolioData(null)
+      setIsInitialLoading(true)
+    }
+  }, [walletAddress])
+
+  // Initial data fetch
   useEffect(() => {
     fetchPortfolioData()
   }, [fetchPortfolioData])
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
+    console.log('Manual refresh triggered')
     fetchPortfolioData(true)
-  }
+  }, [fetchPortfolioData])
 
   // Show loading spinner only on initial load
-  if (isLoading && !portfolioData) {
+  if (isInitialLoading && !portfolioData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -172,15 +249,15 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
         </HamburgerMenu>
 
         {/* Main Content */}
-        <main className="p-6 pt-20 lg:pt-6">{/* Add top padding on mobile for fixed header */}
-          <div className="mb-6 flex items-center justify-between">
+        <main className="p-4 lg:p-6 pt-20 lg:pt-6">{/* Add top padding on mobile for fixed header */}
+          <div className="mb-4 lg:mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div className="space-y-1">
-              <h1 className="text-3xl lg:text-4xl font-bold">Portfolio Overview</h1>
-              <div className="flex items-center gap-2">
-                <div className="text-base lg:text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</div>
+              <h1 className="text-2xl lg:text-4xl font-bold">Portfolio Overview</h1>
+              <div className="flex flex-col lg:flex-row lg:items-center gap-2">
+                <div className="text-sm lg:text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</div>
                 {error && (
-                  <div className="flex items-center gap-1 text-yellow-500 text-base lg:text-sm">
-                    <AlertCircle className="h-4 w-4 lg:h-3 lg:w-3" />
+                  <div className="flex items-center gap-1 text-yellow-500 text-sm">
+                    <AlertCircle className="h-4 w-4" />
                     <span>Using cached/mock data</span>
                   </div>
                 )}
@@ -190,28 +267,28 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
               onClick={handleRefresh}
               disabled={isRefreshing}
               variant="outline"
-              className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black bg-transparent disabled:opacity-50 text-base lg:text-sm px-4 py-2 lg:px-3 lg:py-1.5"
+              className="gap-2 border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black bg-transparent disabled:opacity-50 text-sm px-4 py-2 self-start lg:self-auto"
             >
-              <RefreshCw className={`h-5 w-5 lg:h-4 lg:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
           </div>
 
           {/* Error Banner */}
           {error && (
-            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 lg:h-4 lg:w-4 text-yellow-500" />
-                <div>
-                  <p className="text-base lg:text-sm font-medium text-yellow-500">Portfolio data may be outdated</p>
-                  <p className="text-sm lg:text-xs text-gray-400">{error}</p>
+            <div className="mb-4 lg:mb-6 p-3 lg:p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-yellow-500">Portfolio data may be outdated</p>
+                  <p className="text-xs text-gray-400 mt-1 break-words">{error}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Portfolio Metrics */}
-          <div className="grid gap-4 md:grid-cols-4 mb-6">
+          <div className="grid gap-3 lg:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-4 lg:mb-6">
             <MetricsCard
               title="Total Balance"
               value={`${displayData.totalBalance} CBTC`}
@@ -239,52 +316,52 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
           </div>
 
           {/* Tabs for different views */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <div className="overflow-x-auto">
-              <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-base lg:text-sm whitespace-nowrap inline-flex min-w-full lg:min-w-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
+            <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+              <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 inline-flex min-w-max lg:min-w-0">
                 <TabsTrigger
                   value="overview"
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
                 >
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="defi" 
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
                 >
                   DeFi
                 </TabsTrigger>
                 <TabsTrigger 
                   value="yield" 
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
                 >
                   Yield
                 </TabsTrigger>
                 <TabsTrigger 
                   value="bridge" 
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
                 >
                   Bridge
                 </TabsTrigger>
                 <TabsTrigger
                   value="transactions"
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
                 >
                   Transactions
                 </TabsTrigger>
                 <TabsTrigger
                   value="tokens"
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
                 >
                   Add Tokens
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="overview" className="space-y-6">
-              <Card className="p-6 bg-gray-900/50 border-orange-500/20">
+            <TabsContent value="overview" className="space-y-4 lg:space-y-6">
+              <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-xl lg:text-lg font-semibold">Portfolio Performance</h2>
+                  <h2 className="text-lg lg:text-xl font-semibold">Portfolio Performance</h2>
                 </div>
                 <StatsChart />
               </Card>
@@ -318,7 +395,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
               <TransactionHistory 
                 walletAddress={walletAddress}
                 transactions={displayData.transactions || []}
-                isLoading={isLoading}
+                isLoading={isInitialLoading && !portfolioData}
               />
             </TabsContent>
 
