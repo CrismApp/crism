@@ -1,9 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { getTokenConfig } from "@/lib/token-config"
-import { Plus } from "lucide-react"
 import Image from "next/image"
 
 interface Token {
@@ -21,10 +19,9 @@ interface TokenListProps {
   tokens: Token[]
   nativeBalance?: number
   totalBalanceUSD?: number
-  onAddTokenClick?: () => void
 }
 
-export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAddTokenClick }: TokenListProps) {
+export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0 }: TokenListProps) {
   // native token
   const nativeToken = nativeBalance > 0 ? {
     symbol: 'CBTC',
@@ -48,31 +45,12 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
       <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
           <h3 className="text-lg lg:text-xl font-semibold">Token Holdings</h3>
-          {onAddTokenClick && (
-            <Button
-              onClick={onAddTokenClick}
-              size="sm"
-              className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2 self-start sm:self-auto"
-            >
-              <Plus size={16} />
-              Add Token
-            </Button>
-          )}
         </div>
         <div className="text-center py-6 lg:py-8">
-          <div className="text-gray-400 mb-2 text-sm lg:text-base">No tokens found</div>
-          <div className="text-sm text-gray-500 mb-4">
+          <div className="text-gray-400 mb-2 text-2xl lg:text-xl">No tokens found</div>
+          <div className="text-base text-gray-500 mb-4">
             Your wallet doesn&apos;t contain any tokens yet
           </div>
-          {onAddTokenClick && (
-            <Button
-              onClick={onAddTokenClick}
-              className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2 mx-auto text-sm px-4 py-2"
-            >
-              <Plus size={16} />
-              Add Your First Token
-            </Button>
-          )}
         </div>
       </Card>
     )
@@ -81,22 +59,11 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
   return (
     <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-        <h3 className="text-lg lg:text-xl font-semibold">Token Holdings</h3>
+        <h3 className="text-xl lg:text-2xl font-semibold">Token Holdings</h3>
         <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-400">
+          <div className="text-base text-gray-400">
             {sortedTokens.length} token{sortedTokens.length !== 1 ? 's' : ''}
           </div>
-          {onAddTokenClick && (
-            <Button
-              onClick={onAddTokenClick}
-              size="sm"
-              className="bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-2 text-sm px-3 py-2"
-            >
-              <Plus size={16} />
-              <span className="hidden sm:inline">Add Token</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          )}
         </div>
       </div>
       
@@ -130,7 +97,7 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
                       />
                       {/* Fallback placeholder */}
                       <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center" style={{display: 'none'}}>
-                        <span className="text-white font-bold text-xs lg:text-sm">
+                        <span className="text-white font-bold text-sm lg:text-base">
                           {token.symbol.slice(0, 2).toUpperCase()}
                         </span>
                       </div>
@@ -140,7 +107,7 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
                   // Default placeholder for native token or tokens without logo
                   return (
                     <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-xs lg:text-sm">
+                      <span className="text-white font-bold text-sm lg:text-base">
                         {token.symbol.slice(0, 2).toUpperCase()}
                       </span>
                     </div>
@@ -149,8 +116,8 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
               })()}
               
               <div className="min-w-0 flex-1">
-                <div className="font-medium text-white text-sm lg:text-base">{token.symbol}</div>
-                <div className="text-xs lg:text-sm text-gray-400 truncate">
+                <div className="font-medium text-white text-base lg:text-lg">{token.symbol}</div>
+                <div className="text-sm lg:text-base text-gray-400 truncate">
                   {token.address === 'native' ? 'Native Token' : 
                    (() => {
                      const tokenConfig = getTokenConfig(token.address || '')
@@ -161,14 +128,14 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
             </div>
             
             <div className="text-right flex-shrink-0">
-              <div className="font-medium text-white text-sm lg:text-base">
+              <div className="font-medium text-white text-base lg:text-lg">
                 {token.balanceFormatted.toFixed(6)} {token.symbol}
               </div>
-              <div className="text-xs lg:text-sm text-gray-400">
+              <div className="text-sm lg:text-base text-gray-400">
                 ${token.valueUSD?.toLocaleString() || '0.00'}
               </div>
               {token.percentage > 0 && (
-                <div className="text-xs text-orange-500">
+                <div className="text-sm text-orange-500">
                   {token.percentage.toFixed(1)}%
                 </div>
               )}
@@ -179,7 +146,7 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0, onAd
       
       {/* Summary */}
       <div className="mt-4 pt-4 border-t border-gray-700/50">
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-base">
           <span className="text-gray-400">Total Portfolio Value</span>
           <span className="text-white font-medium">
             ${(nativeToken?.valueUSD || 0 + tokens.reduce((sum, t) => sum + (t.valueUSD || 0), 0)).toLocaleString()}

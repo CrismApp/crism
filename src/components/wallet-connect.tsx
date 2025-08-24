@@ -111,22 +111,22 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
             <Wallet className="h-8 w-8 text-white" />
           </div>
 
-          <h2 className="text-2xl font-bold text-white mb-2">Connect to Citrea Testnet</h2>
-          <p className="text-gray-300 mb-8">
+          <h2 className="text-3xl font-bold text-white mb-2">Connect to Citrea Testnet</h2>
+          <p className="text-lg text-gray-300 mb-8">
             Connect your wallet to Citrea Testnet to start tracking your Bitcoin L2 portfolio
           </p>
 
           {error && (
             <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-6">
               <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <span className="text-red-400 text-sm text-left">{error}</span>
+              <span className="text-red-400 text-base text-left">{error}</span>
             </div>
           )}
 
           <Button
             onClick={connectWallet}
             disabled={isConnecting}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 text-lg"
           >
             {isConnecting ? (
               <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
             )}
           </Button>
 
-          <div className="mt-6 space-y-2 text-s text-gray-400">
+          <div className="mt-6 space-y-2 text-base text-gray-400">
             <p>Network: Citrea Testnet (Chain ID: 5115)</p>
             <p>Currency: cBTC</p>
             <p>Supported wallets: MetaMask, WalletConnect, Coinbase Wallet</p>

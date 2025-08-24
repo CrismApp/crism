@@ -52,18 +52,18 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
           <div className="flex items-center gap-2 p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
             <Wallet className="h-5 w-5 text-orange-500 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-400 mb-1">Connected Wallet</p>
+              <p className="text-sm text-gray-400 mb-1">Connected Wallet</p>
               <div className="flex items-center gap-2">
-                <p className="text-sm font-mono text-orange-500 truncate">{formatAddress(walletAddress)}</p>
+                <p className="text-base font-mono text-orange-500 truncate">{formatAddress(walletAddress)}</p>
                 <button
                   onClick={handleCopyAddress}
                   className="p-1 hover:bg-orange-500/20 rounded transition-colors"
                   title="Copy address"
                 >
                   {copied ? (
-                    <Check className="h-3 w-3 text-green-500" />
+                    <Check className="h-4 w-4 text-green-500" />
                   ) : (
-                    <Copy className="h-3 w-3 text-gray-400 hover:text-orange-500" />
+                    <Copy className="h-4 w-4 text-gray-400 hover:text-orange-500" />
                   )}
                 </button>
                 {onDisconnect && (
@@ -72,7 +72,7 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
                     className="p-1 hover:bg-red-500/20 rounded transition-colors"
                     title="Disconnect wallet"
                   >
-                    <LogOut className="h-3 w-3 text-gray-400 hover:text-red-500" />
+                    <LogOut className="h-4 w-4 text-gray-400 hover:text-red-500" />
                   </button>
                 )}
               </div>
@@ -86,7 +86,7 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
         <Button
           asChild
           variant="ghost"
-          className={`w-full justify-start gap-3 text-sm h-11 px-3 ${
+          className={`w-full justify-start gap-3 text-base h-12 px-3 ${
             pathname.startsWith("/dashboard")
               ? "text-orange-500 bg-orange-500/10 border-l-2 border-orange-500"
               : "text-gray-300 hover:text-orange-500 hover:bg-orange-500/5"
@@ -100,7 +100,7 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
         <Button
           asChild
           variant="ghost"
-          className={`w-full justify-start gap-3 text-sm h-11 px-3 ${
+          className={`w-full justify-start gap-3 text-base h-12 px-3 ${
             pathname.startsWith("/marketplace")
               ? "text-orange-500 bg-orange-500/10 border-l-2 border-orange-500"
               : "text-gray-300 hover:text-orange-500 hover:bg-orange-500/5"
@@ -115,7 +115,7 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
 
       {/* Footer with app version */}
       <div className="p-4 border-t border-orange-500/10">
-        <p className="text-xs text-gray-500 text-center">CRISM v1.0.0</p>
+        <p className="text-sm text-gray-500 text-center">CRISM v1.0.0</p>
       </div>
     </>
   )

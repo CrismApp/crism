@@ -141,19 +141,19 @@ export function Marketplace() {
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl lg:text-3xl font-bold mb-2">DeFi Marketplace</h1>
-          <p className="text-lg lg:text-base text-gray-400">Discover and invest in the best DeFi protocols on Citrea</p>
+          <h1 className="text-5xl lg:text-4xl font-bold mb-2">DeFi Marketplace</h1>
+          <p className="text-xl lg:text-lg text-gray-400">Discover and invest in the best DeFi protocols on Citrea</p>
         </div>
 
         {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 lg:h-4 lg:w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-6 w-6 lg:h-5 lg:w-5 text-gray-400" />
             <Input
               placeholder="Search protocols..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-900/50 border-orange-500/20 text-base lg:text-sm h-12 lg:h-10"
+              className="pl-10 bg-gray-900/50 border-orange-500/20 text-lg lg:text-base h-14 lg:h-12"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -162,7 +162,7 @@ export function Marketplace() {
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 onClick={() => setSelectedCategory(category)}
-                className={`text-base lg:text-sm px-4 py-2 lg:px-3 lg:py-1.5 whitespace-nowrap ${
+                className={`text-lg lg:text-base px-5 py-3 lg:px-4 lg:py-2 whitespace-nowrap ${
                   selectedCategory === category
                     ? "bg-orange-500 hover:bg-orange-600"
                     : "border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black"
@@ -176,22 +176,22 @@ export function Marketplace() {
 
         <Tabs defaultValue="protocols" className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-base lg:text-sm whitespace-nowrap inline-flex min-w-full lg:min-w-0">
+            <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-lg lg:text-base whitespace-nowrap inline-flex min-w-full lg:min-w-0">
               <TabsTrigger 
                 value="protocols" 
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-base lg:text-lg whitespace-nowrap"
               >
                 All Protocols
               </TabsTrigger>
               <TabsTrigger
                 value="opportunities"
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-base lg:text-lg whitespace-nowrap"
               >
                 Hot Opportunities
               </TabsTrigger>
               <TabsTrigger 
                 value="trending" 
-                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-sm lg:text-base whitespace-nowrap"
+                className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-base lg:text-lg whitespace-nowrap"
               >
                 Trending
               </TabsTrigger>

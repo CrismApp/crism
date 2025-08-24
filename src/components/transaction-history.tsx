@@ -212,8 +212,8 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
         <div className="flex flex-col items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-orange-500 mb-3" />
           <span className="text-gray-400">Loading transaction history....</span>
-          <span className="text-xs text-gray-500 mt-2">Scanning blockchain for your transactions</span>
-          <span className="text-xs text-orange-500 mt-1">This may take some time to complete</span>
+          <span className="text-sm text-gray-500 mt-2">Scanning blockchain for your transactions</span>
+          <span className="text-sm text-orange-500 mt-1">This may take some time to complete</span>
         </div>
       </div>
     )
@@ -226,12 +226,12 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
         <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowUpRight className="h-4 w-4 text-orange-500" />
-            <span className="text-xs sm:text-sm text-gray-400">Total Sent</span>
+            <span className="text-sm sm:text-base text-gray-400">Total Sent</span>
           </div>
-          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
             {transactionStats.totalSent.toFixed(4)} BTC
           </div>
-          <div className="text-xs sm:text-sm text-red-400">
+          <div className="text-sm sm:text-base text-red-400">
             -${(transactionStats.totalSent * 60000).toFixed(0)}
           </div>
         </Card>
@@ -239,12 +239,12 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
         <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowDownLeft className="h-4 w-4 text-orange-500" />
-            <span className="text-xs sm:text-sm text-gray-400">Total Received</span>
+            <span className="text-sm sm:text-base text-gray-400">Total Received</span>
           </div>
-          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
             {transactionStats.totalReceived.toFixed(4)} BTC
           </div>
-          <div className="text-xs sm:text-sm text-green-400">
+          <div className="text-sm sm:text-base text-green-400">
             +${(transactionStats.totalReceived * 60000).toFixed(0)}
           </div>
         </Card>
@@ -252,12 +252,12 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
         <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Repeat className="h-4 w-4 text-orange-500" />
-            <span className="text-xs sm:text-sm text-gray-400">Total Fees</span>
+            <span className="text-sm sm:text-base text-gray-400">Total Fees</span>
           </div>
-          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">
             {transactionStats.totalFees.toFixed(6)} BTC
           </div>
-          <div className="text-xs sm:text-sm text-gray-400">
+          <div className="text-sm sm:text-base text-gray-400">
             ${(transactionStats.totalFees * 60000).toFixed(2)}
           </div>
         </Card>
@@ -265,9 +265,9 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
         <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ExternalLink className="h-4 w-4 text-orange-500" />
-            <span className="text-xs sm:text-sm text-gray-400">Transactions</span>
+            <span className="text-sm sm:text-base text-gray-400">Transactions</span>
           </div>
-          <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{transactionStats.totalCount}</div>
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">{transactionStats.totalCount}</div>
           <div className="text-xs sm:text-sm text-gray-400">All time</div>
         </Card>
       </div>

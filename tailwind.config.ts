@@ -9,6 +9,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        'xs': ['0.875rem', { lineHeight: '1.25rem' }], // Increased from 0.75rem
+        'sm': ['1rem', { lineHeight: '1.375rem' }],    // Increased from 0.875rem
+        'base': ['1.125rem', { lineHeight: '1.5rem' }], // Increased from 1rem
+        'lg': ['1.25rem', { lineHeight: '1.75rem' }],   // Increased from 1.125rem
+        'xl': ['1.5rem', { lineHeight: '2rem' }],       // Increased from 1.25rem
+        '2xl': ['1.75rem', { lineHeight: '2.25rem' }],  // Increased from 1.5rem
+        '3xl': ['2rem', { lineHeight: '2.5rem' }],      // Increased from 1.875rem
+      },
       fontFamily: {
         display: ['var(--font-vt323)', 'monospace'],
         mono: ['"Roboto Mono"', 'monospace'],

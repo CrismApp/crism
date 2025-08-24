@@ -11,7 +11,7 @@ import { DeFiPositions } from "@/components/defi-positions"
 import { YieldFarming } from "@/components/yield-farming"
 import { CrossChainBridge } from "@/components/cross-chain-bridge"
 import { TokenList } from "@/components/token-list"
-import { AddTokenComponent } from "@/components/add-token"
+
 import { HamburgerMenu } from "@/components/ui/hamburger-menu"
 import { Sidebar } from "@/components/sidebar"
 import { RefreshCw, AlertCircle } from "lucide-react"
@@ -252,11 +252,11 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
         <main className="p-4 lg:p-6 pt-20 lg:pt-6">{/* Add top padding on mobile for fixed header */}
           <div className="mb-4 lg:mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div className="space-y-1">
-              <h1 className="text-2xl lg:text-4xl font-bold">Portfolio Overview</h1>
+              <h1 className="text-3xl lg:text-5xl font-bold">Portfolio Overview</h1>
               <div className="flex flex-col lg:flex-row lg:items-center gap-2">
-                <div className="text-sm lg:text-sm text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</div>
+                <div className="text-base lg:text-base text-gray-400">Last updated: {lastUpdated.toLocaleTimeString()}</div>
                 {error && (
-                  <div className="flex items-center gap-1 text-yellow-500 text-sm">
+                  <div className="flex items-center gap-1 text-yellow-500 text-base">
                     <AlertCircle className="h-4 w-4" />
                     <span>Using cached/mock data</span>
                   </div>
@@ -349,12 +349,6 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 >
                   Transactions
                 </TabsTrigger>
-                <TabsTrigger
-                  value="tokens"
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
-                >
-                  Add Tokens
-                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -370,10 +364,6 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 tokens={displayData.tokens || []}
                 nativeBalance={displayData.nativeBalance || displayData.balance}
                 totalBalanceUSD={displayData.totalBalanceUSD}
-                onAddTokenClick={() => {
-                  // Switch to the tokens tab
-                  setActiveTab("tokens")
-                }}
               />
               
              
@@ -396,16 +386,6 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 walletAddress={walletAddress}
                 transactions={displayData.transactions || []}
                 isLoading={isInitialLoading && !portfolioData}
-              />
-            </TabsContent>
-
-            <TabsContent value="tokens">
-              <AddTokenComponent 
-                onTokenAdded={(token) => {
-                  console.log('Token added:', token)
-                  // Optionally refresh portfolio data when a token is added
-                  handleRefresh()
-                }}
               />
             </TabsContent>
           </Tabs>
