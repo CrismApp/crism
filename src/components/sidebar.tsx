@@ -108,7 +108,7 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
         >
           <Link href="/marketplace" className="flex items-center gap-3 w-full" onClick={handleNavClick}>
             <ShoppingBag className="h-4 w-4" />
-            Marketplace
+            Dapps
           </Link>
         </Button>
       </nav>

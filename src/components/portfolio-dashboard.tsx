@@ -325,6 +325,12 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 >
                   Overview
                 </TabsTrigger>
+                 <TabsTrigger
+                  value="transactions"
+                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
+                >
+                  Transactions
+                </TabsTrigger>
                 <TabsTrigger 
                   value="defi" 
                   className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
@@ -343,12 +349,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
                 >
                   Bridge
                 </TabsTrigger>
-                <TabsTrigger
-                  value="transactions"
-                  className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
-                >
-                  Transactions
-                </TabsTrigger>
+               
               </TabsList>
             </div>
 
@@ -368,6 +369,14 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
               
              
             </TabsContent>
+            
+             <TabsContent value="transactions">
+              <TransactionHistory 
+                walletAddress={walletAddress}
+                transactions={displayData.transactions || []}
+                isLoading={isInitialLoading && !portfolioData}
+              />
+            </TabsContent>
 
             <TabsContent value="defi">
               <DeFiPositions />
@@ -381,13 +390,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
               <CrossChainBridge />
             </TabsContent>
 
-            <TabsContent value="transactions">
-              <TransactionHistory 
-                walletAddress={walletAddress}
-                transactions={displayData.transactions || []}
-                isLoading={isInitialLoading && !portfolioData}
-              />
-            </TabsContent>
+           
           </Tabs>
         </main>
       </div>
