@@ -111,6 +111,21 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
             Dapps
           </Link>
         </Button>
+
+        <Button
+          asChild
+          variant="ghost"
+          className={`w-full justify-start gap-3 text-base h-12 px-3 ${
+            pathname.startsWith("/profile")
+              ? "text-orange-500 bg-orange-500/10 border-l-2 border-orange-500"
+              : "text-gray-300 hover:text-orange-500 hover:bg-orange-500/5"
+          }`}
+        >
+          <Link href="/profile" className="flex items-center gap-3 w-full" onClick={handleNavClick}>
+            <ShoppingBag className="h-4 w-4" />
+           profile
+          </Link>
+        </Button>
       </nav>
 
       {/* Footer with app version */}

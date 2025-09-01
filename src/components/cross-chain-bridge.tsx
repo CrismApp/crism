@@ -80,7 +80,7 @@ export function CrossChainBridge() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowRightLeft className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Total Bridged</span>
@@ -89,7 +89,7 @@ export function CrossChainBridge() {
           <div className="text-sm text-green-500">+$6,825 this week</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Completed</span>
@@ -98,7 +98,7 @@ export function CrossChainBridge() {
           <div className="text-sm text-gray-400">Transactions</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Pending</span>
@@ -107,7 +107,7 @@ export function CrossChainBridge() {
           <div className="text-sm text-orange-400">In progress</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Failed</span>
@@ -117,7 +117,7 @@ export function CrossChainBridge() {
         </Card>
       </div>
 
-      <Card className="bg-gray-900/50 border-orange-500/20">
+      <Card className=" border-orange-500/20">
         <div className="p-6">
           <h3 className="text-lg font-semibold mb-4">Bridge Transaction History</h3>
           <Table>

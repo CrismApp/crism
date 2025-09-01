@@ -153,7 +153,7 @@ export function Marketplace() {
               placeholder="Search protocols..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-900/50 border-orange-500/20 text-lg lg:text-base h-14 lg:h-12"
+              className="pl-10 border-orange-500/20 text-lg lg:text-base h-14 lg:h-12"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto">
@@ -176,7 +176,7 @@ export function Marketplace() {
 
         <Tabs defaultValue="protocols" className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 text-lg lg:text-base whitespace-nowrap inline-flex min-w-full lg:min-w-0">
+            <TabsList className=" border border-orange-500/20 h-auto p-1 text-lg lg:text-base whitespace-nowrap inline-flex min-w-full lg:min-w-0">
               <TabsTrigger 
                 value="protocols" 
                 className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 lg:px-4 lg:py-2 text-base lg:text-lg whitespace-nowrap"
@@ -203,7 +203,7 @@ export function Marketplace() {
               {filteredProtocols.map((protocol, index) => (
                 <Card
                   key={index}
-                  className="p-6 bg-gray-900/50 border-orange-500/20 hover:border-orange-500/40 transition-colors"
+                  className="p-6  border-orange-500/20 hover:border-orange-500/40 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <Image
@@ -261,7 +261,7 @@ export function Marketplace() {
           <TabsContent value="opportunities">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {opportunities.map((opportunity, index) => (
-                <Card key={index} className="p-6 bg-gray-900/50 border-orange-500/20">
+                <Card key={index} className="p-6  border-orange-500/20">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="font-semibold text-white">{opportunity.protocol}</h3>
@@ -302,7 +302,7 @@ export function Marketplace() {
           <TabsContent value="trending">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {protocols.slice(0, 3).map((protocol, index) => (
-                <Card key={index} className="p-6 bg-gray-900/50 border-orange-500/20">
+                <Card key={index} className="p-6  border-orange-500/20">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="h-5 w-5 text-orange-500" />
                     <Badge className="bg-orange-500/10 text-orange-500">Trending #{index + 1}</Badge>

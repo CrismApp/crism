@@ -42,7 +42,7 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0 }: To
 
   if (sortedTokens.length === 0) {
     return (
-      <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20">
+      <Card className="p-4 lg:p-6  border-orange-500/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
           <h3 className="text-lg lg:text-xl font-semibold">Token Holdings</h3>
         </div>
@@ -57,7 +57,7 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0 }: To
   }
 
   return (
-    <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20">
+    <Card className="p-4 lg:p-6 border-orange-500/20">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <h3 className="text-xl lg:text-2xl font-semibold">Token Holdings</h3>
         <div className="flex items-center gap-3">
@@ -71,7 +71,7 @@ export function TokenList({ tokens, nativeBalance = 0, totalBalanceUSD = 0 }: To
         {sortedTokens.map((token, index) => (
           <div 
             key={token.address || token.symbol || index}
-            className="flex items-center justify-between p-3 lg:p-4 bg-gray-800/50 rounded-lg border border-gray-700/50 hover:border-orange-500/30 transition-colors"
+            className="flex items-center justify-between p-3 lg:p-4 bg-orange/40 rounded-lg border border-gray-700/50 hover:border-orange-500/30 transition-colors"
           >
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               {/* Token Icon */}

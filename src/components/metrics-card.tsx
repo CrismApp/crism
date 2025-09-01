@@ -15,7 +15,7 @@ interface MetricsCardProps {
 
 export function MetricsCard({ title, value, change, chart }: MetricsCardProps) {
   return (
-    <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20 hover:border-orange-500/40 transition-all duration-200">
+    <Card className="p-4 lg:p-6  border-orange-500/20 hover:border-orange-500/40 transition-all duration-200">
       <div className="flex items-center justify-between mb-3 lg:mb-4">
         <h3 className="text-base lg:text-sm text-gray-400 font-medium">{title}</h3>
         {chart ? <ArrowUpRight className="h-5 w-5 lg:h-4 lg:w-4 text-gray-400" /> : null}

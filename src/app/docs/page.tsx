@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -20,9 +19,7 @@ import {
   Zap,
   Shield,
   TrendingUp,
-  Globe,
   Target,
-  Award,
   Settings,
   FileText,
   Link as LinkIcon,
@@ -38,7 +35,7 @@ import {
   Info
 } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 
 export default function DocsPage() {
   const [copiedText, setCopiedText] = useState("")
@@ -50,6 +47,24 @@ export default function DocsPage() {
     setCopiedText(label)
     setTimeout(() => setCopiedText(""), 2000)
   }
+
+  const tableOfContents = useMemo(() => [
+    { id: "overview", title: "Overview", icon: BookOpen, level: 1 },
+    { id: "getting-started", title: "Getting Started", icon: Rocket, level: 1 },
+    { id: "installation", title: "Installation", icon: Settings, level: 2 },
+    { id: "wallet-setup", title: "Wallet Setup", icon: Wallet, level: 2 },
+    { id: "core-features", title: "Core Features", icon: BarChart3, level: 1 },
+    { id: "portfolio-dashboard", title: "Portfolio Dashboard", icon: TrendingUp, level: 2 },
+    { id: "marketplace", title: "Marketplace", icon: ShoppingBag, level: 2 },
+    { id: "prism-nft", title: "Prism NFT System", icon: Gift, level: 2 },
+    { id: "user-guide", title: "User Guide", icon: FileText, level: 1 },
+    { id: "navigation", title: "Navigation", icon: Search, level: 2 },
+    { id: "features-overview", title: "Features Overview", icon: Star, level: 2 },
+    { id: "api-docs", title: "API Documentation", icon: Code, level: 1 },
+    { id: "architecture", title: "Technical Architecture", icon: Settings, level: 1 },
+    { id: "troubleshooting", title: "Troubleshooting", icon: AlertCircle, level: 1 },
+    { id: "faq", title: "FAQ", icon: HelpCircle, level: 1 }
+  ], [])
 
   // Handle scroll tracking for active section
   useEffect(() => {
@@ -68,25 +83,7 @@ export default function DocsPage() {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const tableOfContents = [
-    { id: "overview", title: "Overview", icon: BookOpen, level: 1 },
-    { id: "getting-started", title: "Getting Started", icon: Rocket, level: 1 },
-    { id: "installation", title: "Installation", icon: Settings, level: 2 },
-    { id: "wallet-setup", title: "Wallet Setup", icon: Wallet, level: 2 },
-    { id: "core-features", title: "Core Features", icon: BarChart3, level: 1 },
-    { id: "portfolio-dashboard", title: "Portfolio Dashboard", icon: TrendingUp, level: 2 },
-    { id: "marketplace", title: "Marketplace", icon: ShoppingBag, level: 2 },
-    { id: "prism-nft", title: "Prism NFT System", icon: Gift, level: 2 },
-    { id: "user-guide", title: "User Guide", icon: FileText, level: 1 },
-    { id: "navigation", title: "Navigation", icon: Search, level: 2 },
-    { id: "features-overview", title: "Features Overview", icon: Star, level: 2 },
-    { id: "api-docs", title: "API Documentation", icon: Code, level: 1 },
-    { id: "architecture", title: "Technical Architecture", icon: Settings, level: 1 },
-    { id: "troubleshooting", title: "Troubleshooting", icon: AlertCircle, level: 1 },
-    { id: "faq", title: "FAQ", icon: HelpCircle, level: 1 }
-  ]
+  }, [tableOfContents])
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
@@ -99,7 +96,7 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="border-b border-orange-500/20 bg-black/50 backdrop-blur sticky top-0 z-50">
+      <header className="border-b border-orange-500/20 bg-black backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">
@@ -281,7 +278,7 @@ export default function DocsPage() {
                     What is Crism?
                   </h3>
                   <p className="text-base lg:text-lg text-gray-300 leading-relaxed mb-4">
-                    <strong className="text-orange-500">CRISM</strong> is the first comprehensive portfolio management and DeFi tracking application built specifically for <strong>Citrea</strong>, Bitcoin's pioneering ZK rollup network. Our platform provides real-time insights into your digital assets, DeFi positions, and transaction history.
+                    <strong className="text-orange-500">CRISM</strong> is the first comprehensive portfolio management and DeFi tracking application built specifically for <strong>Citrea</strong>, Bitcoin&apos;s pioneering ZK rollup network. Our platform provides real-time insights into your digital assets, DeFi positions, and transaction history.
                   </p>
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
                     <div className="flex items-center gap-3 p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
@@ -350,7 +347,7 @@ export default function DocsPage() {
                       <p className="text-gray-300 mb-3">
                         Crism is a web-based application. Simply navigate to our official URL:
                       </p>
-                      <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 flex items-center justify-between">
+                      <div className=" p-4 rounded-lg border border-gray-700 flex items-center justify-between">
                         <code className="text-orange-400 text-base lg:text-lg">https://crism.app</code>
                         <Button
                           variant="outline"
@@ -717,8 +714,8 @@ export default function DocsPage() {
                   <div className="border border-gray-700 rounded-lg p-4">
                     <h3 className="font-semibold text-orange-400 mb-2">Wallet Connection Issues</h3>
                     <div className="space-y-2 text-sm text-gray-300">
-                      <p><strong>Problem:</strong> Wallet won't connect or shows wrong network</p>
-                      <p><strong>Solution:</strong> Ensure you're connected to Citrea Testnet (Chain ID: 5115)</p>
+                      <p><strong>Problem:</strong> Wallet won&apos;t connect or shows wrong network</p>
+                      <p><strong>Solution:</strong> Ensure you&apos;re connected to Citrea Testnet (Chain ID: 5115)</p>
                       <div className="bg-gray-800/50 p-3 rounded border border-gray-600 mt-2 space-y-2">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-mono">Network: Citrea Testnet</p>
@@ -808,7 +805,7 @@ export default function DocsPage() {
               <Card className="p-6 lg:p-8 bg-gray-900/50 border-orange-500/20">
                 <h3 className="text-lg font-semibold text-orange-400 mb-3">When will mainnet support be available?</h3>
                 <p className="text-gray-300">
-                  Mainnet support will be available once Citrea launches its mainnet. We're currently operating on testnet to ensure stability and security.
+                  Mainnet support will be available once Citrea launches its mainnet. We&apos;re currently operating on testnet to ensure stability and security.
                 </p>
               </Card>
             </div>

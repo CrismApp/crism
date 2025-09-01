@@ -22,7 +22,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={vt323.className}>{children}</body>
+      <body className={vt323.className}>
+      
+          {children}
+       
+      </body>
     </html>
   )
 } 

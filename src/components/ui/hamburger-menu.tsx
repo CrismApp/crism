@@ -23,7 +23,7 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
   return (
     <>
       {/* Mobile Header with Logo and Hamburger */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900/90 backdrop-blur-md border-b border-orange-500/20">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30  backdrop-blur-md border-b border-orange-500/20">
         <div className="flex h-16 items-center justify-between px-6">
           {/* Logo */}
           <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
       {/* Desktop Sidebar - Always visible */}
       <aside
         className={cn(
-          "hidden lg:flex lg:flex-col border-r border-orange-500/20 bg-gray-900/50 backdrop-blur",
+          "hidden lg:flex lg:flex-col border-r border-orange-500/20  backdrop-blur",
           className
         )}
       >
@@ -66,7 +66,7 @@ export function HamburgerMenu({ children, className }: HamburgerMenuProps) {
       {/* Mobile Sidebar - Slides from right */}
       <aside
         className={cn(
-          "lg:hidden fixed inset-y-0 right-0 z-50 w-80 transform transition-transform duration-300 ease-in-out bg-gray-900/95 backdrop-blur-md border-l border-orange-500/20 flex flex-col",
+          "lg:hidden fixed inset-y-0 right-0 z-50 w-80 transform transition-transform duration-300 ease-in-out backdrop-blur-md border-l border-orange-500/20 flex flex-col",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >

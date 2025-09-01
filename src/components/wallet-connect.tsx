@@ -105,7 +105,7 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-gray-900/50 border-orange-500/20">
+      <Card className="w-full max-w-md p-8 border-orange-500/20">
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <Wallet className="h-8 w-8 text-white" />

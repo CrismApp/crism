@@ -46,7 +46,7 @@ export function DeFiPositions() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Total DeFi Value</span>
@@ -55,7 +55,7 @@ export function DeFiPositions() {
           <div className="text-sm text-green-500">+$23.27 today</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Average APY</span>
@@ -64,7 +64,7 @@ export function DeFiPositions() {
           <div className="text-sm text-green-500">+0.8% this week</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <TrendingDown className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Active Positions</span>
@@ -74,7 +74,7 @@ export function DeFiPositions() {
         </Card>
       </div>
 
-      <Card className="bg-gray-900/50 border-orange-500/20">
+      <Card className=" border-orange-500/20">
         <div className="p-6">
           <h3 className="text-lg font-semibold mb-4">DeFi Positions</h3>
           <Table>

@@ -223,7 +223,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
     <div className="space-y-6">
       {/* Transaction Statistics */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowUpRight className="h-4 w-4 text-orange-500" />
             <span className="text-sm sm:text-base text-gray-400">Total Sent</span>
@@ -236,7 +236,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ArrowDownLeft className="h-4 w-4 text-orange-500" />
             <span className="text-sm sm:text-base text-gray-400">Total Received</span>
@@ -249,7 +249,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Repeat className="h-4 w-4 text-orange-500" />
             <span className="text-sm sm:text-base text-gray-400">Total Fees</span>
@@ -262,7 +262,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
           </div>
         </Card>
 
-        <Card className="p-3 sm:p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-3 sm:p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <ExternalLink className="h-4 w-4 text-orange-500" />
             <span className="text-sm sm:text-base text-gray-400">Transactions</span>
@@ -273,7 +273,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
       </div>
 
       {/* Transaction Table */}
-      <Card className="bg-gray-900/50 border-orange-500/20">
+      <Card className=" border-orange-500/20">
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
             <h3 className="text-lg font-semibold mb-2 sm:mb-0">Recent Transactions</h3>
@@ -363,7 +363,7 @@ export function TransactionHistory({ walletAddress, transactions, isLoading }: T
               {/* Mobile Card View */}
               <div className="md:hidden space-y-3">
                 {currentTransactions.map((tx, index) => (
-                  <div key={`mobile-${tx.hash || 'unknown'}-${index}`} className="p-4 bg-gray-800/50 rounded-lg border border-orange-500/10">
+                  <div key={`mobile-${tx.hash || 'unknown'}-${index}`} className="p-4  rounded-lg border border-orange-500/10">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         {getTypeIcon(tx.type || 'Unknown')}

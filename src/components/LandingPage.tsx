@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ArrowRight, BarChart3, TrendingUp, Globe, Menu, X, Star, ChevronDown, Play } from "lucide-react"
+import { ArrowRight, BarChart3, TrendingUp, Globe, Menu, X, ChevronDown } from "lucide-react"
 import { useState, useEffect } from "react"
+
 
 interface LandingPageProps {
   onGetStarted: () => void
@@ -23,12 +24,13 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
   }, [])
   
   return (
-    <div className="min-h-screen bg-black text-white text-2xl overflow-hidden relative">
-      {/* Animated background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white relative overflow-hidden">
+
+      {/* Additional subtle background elements for depth */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-orange-500/15 to-orange-600/15 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-full blur-2xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-orange-500/8 to-orange-600/8 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-r from-orange-500/5 to-orange-600/5 rounded-full blur-2xl animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
 
       {/* Interactive cursor trail */}
@@ -42,7 +44,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       ></div>
 
       {/* Header */}
-      <header className="relative z-50 border-b border-orange-500/20 bg-black/50 backdrop-blur-xl">
+      <header className="relative z-50 backdrop-blur-xl pt-5">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -187,7 +189,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          <Card className="group p-6 bg-gray-900/50 border-orange-500/20 backdrop-blur-xl hover:scale-105 transition-all duration-500 cursor-pointer relative overflow-hidden">
+          <Card className="group p-6  border-orange-500/20 backdrop-blur-xl hover:scale-105 transition-all duration-500 cursor-pointer relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
             <BarChart3 className="h-12 w-12 text-orange-500 mb-4" />
             <h3 className="text-xl font-semibold mb-3">Portfolio Tracking</h3>
@@ -197,7 +199,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
           </Card>
 
-          <Card className="group p-6 bg-gray-900/50 border-orange-500/20 backdrop-blur-xl hover:scale-105 transition-all duration-500 cursor-pointer relative overflow-hidden">
+          <Card className="group p-6  border-orange-500/20 backdrop-blur-xl hover:scale-105 transition-all duration-500 cursor-pointer relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
             <TrendingUp className="h-12 w-12 text-orange-500 mb-4" />
             <h3 className="text-xl font-semibold mb-3">DeFi Analytics</h3>
@@ -207,7 +209,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
           </Card>
 
-          <Card className="group p-6 bg-gray-900/50 border-orange-500/20 backdrop-blur-xl hover:scale-105 transition-all duration-500 cursor-pointer relative overflow-hidden">
+          <Card className="group p-6  border-orange-500/20 backdrop-blur-xl hover:scale-105 transition-all duration-500 cursor-pointer relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/10 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
             <Globe className="h-12 w-12 text-orange-500 mb-4" />
             <h3 className="text-xl font-semibold mb-3">Cross-Chain Bridge</h3>
@@ -278,9 +280,9 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-orange-500/20 bg-black/50 backdrop-blur py-8">
+      <footer className="backdrop-blur py-8">
         <div className="container mx-auto px-4 text-center text-gray-400">
-          <p>&copy; 2024 Crism. All rights reserved.</p>
+          <p>&copy; 2025 Crism. All rights reserved.</p>
         </div>
       </footer>
     </div>

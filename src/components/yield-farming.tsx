@@ -50,7 +50,7 @@ export function YieldFarming() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Sprout className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Total Staked</span>
@@ -59,7 +59,7 @@ export function YieldFarming() {
           <div className="text-sm text-green-500">+$450 this week</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Target className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Pending Rewards</span>
@@ -68,7 +68,7 @@ export function YieldFarming() {
           <div className="text-sm text-orange-400">$271.01</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4  border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Zap className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Average APY</span>
@@ -77,7 +77,7 @@ export function YieldFarming() {
           <div className="text-sm text-green-500">+2.3% vs last month</div>
         </Card>
 
-        <Card className="p-4 bg-gray-900/50 border-orange-500/20">
+        <Card className="p-4 border-orange-500/20">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-gray-400">Active Farms</span>
@@ -89,7 +89,7 @@ export function YieldFarming() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {yieldFarms.map((farm, index) => (
-          <Card key={index} className="p-6 bg-gray-900/50 border-orange-500/20">
+          <Card key={index} className="p-6 border-orange-500/20">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-semibold text-white">{farm.name}</h3>

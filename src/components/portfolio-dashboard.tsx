@@ -240,7 +240,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="lg:grid lg:grid-cols-[280px_1fr]">
-        {/* Hamburger Menu with Sidebar - handles both desktop and mobile */}
+      
         <HamburgerMenu>
           <Sidebar 
             walletAddress={walletAddress} 
@@ -249,7 +249,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
         </HamburgerMenu>
 
         {/* Main Content */}
-        <main className="p-4 lg:p-6 pt-20 lg:pt-6">{/* Add top padding on mobile for fixed header */}
+        <main className="p-4 lg:p-6 pt-20 lg:pt-6">
           <div className="mb-4 lg:mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div className="space-y-1">
               <h1 className="text-3xl lg:text-5xl font-bold">Portfolio Overview</h1>
@@ -318,7 +318,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
           {/* Tabs for different views */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 lg:space-y-6">
             <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
-              <TabsList className="bg-gray-900/50 border border-orange-500/20 h-auto p-1 inline-flex min-w-max lg:min-w-0">
+              <TabsList className=" border border-orange-500/20 h-auto p-1 inline-flex min-w-max lg:min-w-0">
                 <TabsTrigger
                   value="overview"
                   className="data-[state=active]:bg-orange-500 data-[state=active]:text-black px-3 py-2 text-sm whitespace-nowrap"
@@ -354,7 +354,7 @@ export function PortfolioDashboard({ walletAddress, onDisconnect }: PortfolioDas
             </div>
 
             <TabsContent value="overview" className="space-y-4 lg:space-y-6">
-              <Card className="p-4 lg:p-6 bg-gray-900/50 border-orange-500/20">
+              <Card className="p-4 lg:p-6 border-orange-500/20">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg lg:text-xl font-semibold">Portfolio Performance</h2>
                 </div>
