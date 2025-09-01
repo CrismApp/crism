@@ -16,7 +16,9 @@ export function Sidebar({ walletAddress, onDisconnect, onNavigate }: SidebarProp
   const pathname = usePathname()
   const [copied, setCopied] = useState(false)
 
-  const formatAddress = (address: string) => {
+  
+  const formatAddress = (address: string): string => {
+    if (!address) return 'Unknown'
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
