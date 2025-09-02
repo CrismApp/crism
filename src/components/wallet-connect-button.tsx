@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Wallet, AlertCircle } from "lucide-react";
+import { Wallet, Copy, Check, LogOut } from "lucide-react";
 
 // Ethereum window interface
 interface EthereumProvider {
@@ -15,9 +15,16 @@ declare global {
   }
 }
 
-export function WalletConnect({ onConnect }: { onConnect: (address: string) => void }) {
+interface WalletConnectProps {
+  onConnect: (address: string) => void;
+  walletAddress?: string;
+  onDisconnect?: () => void;
+}
+
+export function WalletConnect({ onConnect, walletAddress, onDisconnect }: WalletConnectProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const citreaTestnetConfig = {
     chainId: '0x13fb', // 5115 in hex
@@ -29,6 +36,23 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
     },
     rpcUrls: ['https://rpc.testnet.citrea.xyz'],
     blockExplorerUrls: ['https://explorer.testnet.citrea.xyz']
+  };
+
+  const formatAddress = (address: string): string => {
+    if (!address) return 'Unknown';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const handleCopyAddress = async () => {
+    if (!walletAddress) return;
+    
+    try {
+      await navigator.clipboard.writeText(walletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy address:', err);
+    }
   };
 
   const addCitreaTestnet = async () => {
@@ -103,57 +127,74 @@ export function WalletConnect({ onConnect }: { onConnect: (address: string) => v
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 border-orange-500/20">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Wallet className="h-8 w-8 text-white" />
-          </div>
-
-          <h2 className="text-3xl font-bold text-white mb-2">Connect to Citrea Testnet</h2>
-          <p className="text-lg text-gray-300 mb-8">
-            Connect your wallet to Citrea Testnet to start tracking your Bitcoin L2 portfolio
-          </p>
-
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-6">
-              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <span className="text-red-400 text-base text-left">{error}</span>
+  // If wallet is connected, show the connected wallet card
+  if (walletAddress) {
+    return (
+      <div className="space-y-2">
+        <Card className="p-3 border-orange-500/20 bg-orange-500/10">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-orange-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-400 mb-1">Connected Wallet</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-mono text-orange-500">{formatAddress(walletAddress)}</p>
+                <button
+                  onClick={handleCopyAddress}
+                  className="p-1 hover:bg-orange-500/20 rounded transition-colors"
+                  title="Copy address"
+                >
+                  {copied ? (
+                    <Check className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <Copy className="h-3 w-3 text-gray-400 hover:text-orange-500" />
+                  )}
+                </button>
+                {onDisconnect && (
+                  <button
+                    onClick={onDisconnect}
+                    className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                    title="Disconnect wallet"
+                  >
+                    <LogOut className="h-3 w-3 text-gray-400 hover:text-red-500" />
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-
-          <Button
-            onClick={connectWallet}
-            disabled={isConnecting}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 text-lg"
-          >
-            {isConnecting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Connecting to Citrea...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
-                Connect to Citrea Testnet
-              </div>
-            )}
-          </Button>
-
-          <div className="mt-6 space-y-2 text-base text-gray-400">
-            <p>Network: Citrea Testnet (Chain ID: 5115)</p>
-            <p>Currency: cBTC</p>
-            <p>Supported wallets: MetaMask, WalletConnect, Coinbase Wallet</p>
           </div>
+        </Card>
+        {error && (
+          <div className="text-xs text-red-400 mt-1">{error}</div>
+        )}
+      </div>
+    );
+  }
 
-          {/* <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-            <p className="text-orange-400 text-xs">
-              This will automatically add Citrea Testnet to your wallet and switch to it
-            </p>
-          </div> */}
-        </div>
-      </Card>
+  // If wallet is not connected, show small connect button
+  return (
+    <div className="space-y-2">
+      <Button
+        onClick={connectWallet}
+        disabled={isConnecting}
+        variant="outline"
+        size="sm"
+        className="w-full border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black bg-transparent text-xs h-8"
+      >
+        {isConnecting ? (
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin"></div>
+            Connecting...
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <Wallet className="h-3 w-3" />
+            Connect Wallet
+          </div>
+        )}
+      </Button>
+
+      {error && (
+        <div className="text-xs text-red-400 mt-1">{error}</div>
+      )}
     </div>
   );
 }

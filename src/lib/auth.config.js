@@ -1,6 +1,6 @@
 export const authConfig = {
   pages: {
-    signIn: "/profile", // Redirect users to a custom login page
+    signIn: "/profile", 
   },
   callbacks: {
     // Modify JWT token

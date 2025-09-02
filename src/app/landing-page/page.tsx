@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LandingPage } from "@/components/LandingPage"
-import { WalletConnect } from "@/components/wallet-connect"
+import { WalletConnect } from "@/components/wallet-connect-button"
 
 export default function LandingPageRoute() {
   const [showWalletConnect, setShowWalletConnect] = useState(false)

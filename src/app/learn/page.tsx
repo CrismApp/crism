@@ -3,12 +3,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { useWallet } from "@/context/WalletContext";
-import { Marketplace } from "@/components/marketplace";
+import Learn from "@/components/learn";
 import { HamburgerMenu } from "@/components/ui/hamburger-menu";
 import { Sidebar } from "@/components/sidebar";
 import { Auth } from "@/components/auth";
 
-export default function MarketplacePage() {
+export default function LearnPage() {
   const { data: session, isPending } = useSession();
   const { walletAddress, connectWallet, disconnectWallet } = useWallet();
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function MarketplacePage() {
   }
 
   if (!session?.user) {
-    return <Auth onAuthSuccess={() => router.push("/marketplace")} />;
+    return <Auth onAuthSuccess={() => router.push("/learn")} />;
   }
 
   return (
@@ -61,7 +61,7 @@ export default function MarketplacePage() {
         </HamburgerMenu>
 
         <main className="p-6 pt-20 lg:pt-6">{/* Add top padding on mobile for fixed header */}
-          <Marketplace />
+          <Learn />
         </main>
       </div>
     </div>

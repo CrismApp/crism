@@ -1,49 +1,57 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { LoadingScreen } from "@/components/loading-screen"
 import { LandingPage } from "@/components/LandingPage"
-import { WalletConnect } from "@/components/wallet-connect"
-import { PortfolioDashboard } from "@/components/portfolio-dashboard"
+import { Auth } from "@/components/auth"
+import { useSession } from "@/lib/auth-client"
 
-type AppState = "loading" | "landing" | "wallet-connect" | "dashboard"
+type AppState = "loading" | "landing" | "auth" | "dashboard"
 
 export default function Page() {
   const router = useRouter()
+  const { data: session, isPending } = useSession()
   const [appState, setAppState] = useState<AppState>("loading")
-  const [walletAddress, setWalletAddress] = useState<string>("")
+
+  useEffect(() => {
+    if (!isPending) {
+      if (session?.user) {
+        router.push("/dashboard")
+      } else {
+        setAppState("landing")
+      }
+    }
+  }, [session, isPending, router])
 
   const handleLoadingComplete = () => {
-    setAppState("landing")
+    if (!isPending) {
+      if (session?.user) {
+        setAppState("dashboard")
+      } else {
+        setAppState("landing")
+      }
+    }
   }
 
   const handleGetStarted = () => {
-    setAppState("wallet-connect")
+    setAppState("auth")
   }
 
-  const handleWalletConnect = (address: string) => {
-    setWalletAddress(address)
-    router.push("dashboard")
+  const handleAuthSuccess = async () => {
+    router.push("/dashboard")
   }
 
-  const handleDisconnect = () => {
-    setWalletAddress("")
-    router.push("/")
+  // Show loading screen during initial auth check
+  if (isPending || appState === "loading") {
+    return <LoadingScreen onComplete={handleLoadingComplete} />
   }
 
   return (
     <>
-      {appState === "loading" && <LoadingScreen onComplete={handleLoadingComplete} />}
-
       {appState === "landing" && <LandingPage onGetStarted={handleGetStarted} />}
 
-      {appState === "wallet-connect" && <WalletConnect onConnect={handleWalletConnect} />}
-
-      {/* Dashboard is now its own route; keep conditional for safety if user navigates back with state */}
-      {appState === "dashboard" && (
-        <PortfolioDashboard walletAddress={walletAddress} onDisconnect={handleDisconnect} />
-      )}
+      {appState === "auth" && <Auth onAuthSuccess={handleAuthSuccess} />}
     </>
   )
 }
