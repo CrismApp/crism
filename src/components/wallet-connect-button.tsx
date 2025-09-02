@@ -55,6 +55,21 @@ export function WalletConnect({ onConnect, walletAddress, onDisconnect }: Wallet
     }
   };
 
+  const showNoWalletAlert = () => {
+    alert(
+      "No Web3 wallet detected!\n\n" +
+      "To connect your wallet, please:\n" +
+      "1. Install MetaMask or another Web3 wallet extension\n" +
+      "2. Create or import a wallet\n" +
+      "3. Refresh this page and try again\n\n" +
+      "Popular wallet options:\n" +
+      "• MetaMask (browser extension)\n" +
+      "• Coinbase Wallet\n" +
+      "• Rabby Wallet\n" +
+      "• WalletConnect compatible wallets"
+    );
+  };
+
   const addCitreaTestnet = async () => {
     try {
       if (!window.ethereum) {
@@ -90,9 +105,7 @@ export function WalletConnect({ onConnect, walletAddress, onDisconnect }: Wallet
     try {
       // Check if Web3 is available
       if (typeof window === 'undefined' || typeof window.ethereum === "undefined") {
-        // For demo purposes, simulate wallet connection
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        onConnect('0x742d35cc6634c0532925a3b8d4021d21cb5d5bf8');
+        showNoWalletAlert();
         return;
       }
 
@@ -113,9 +126,6 @@ export function WalletConnect({ onConnect, walletAddress, onDisconnect }: Wallet
       if (chainId !== citreaTestnetConfig.chainId) {
         throw new Error("Please switch to Citrea Testnet manually");
       }
-
-      // Simulate connection delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       onConnect(accounts[0]);
     } catch (err: unknown) {
