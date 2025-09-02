@@ -56,18 +56,20 @@ export function WalletConnect({ onConnect, walletAddress, onDisconnect }: Wallet
   };
 
   const showNoWalletAlert = () => {
-    alert(
+    const message = 
       "No Web3 wallet detected!\n\n" +
       "To connect your wallet, please:\n" +
-      "1. Install MetaMask or another Web3 wallet extension\n" +
+      "1. Install a Web3 wallet extension\n" +
       "2. Create or import a wallet\n" +
       "3. Refresh this page and try again\n\n" +
-      "Popular wallet options:\n" +
-      "• MetaMask (browser extension)\n" +
-      "• Coinbase Wallet\n" +
-      "• Rabby Wallet\n" +
-      "• WalletConnect compatible wallets"
-    );
+      "Install MetaMask:\n" +
+      "• Chrome/Edge/Brave: Visit metamask.io/download\n" +
+      "• Firefox: Search 'MetaMask' in Firefox Add-ons\n\n" +
+      "Other options: Coinbase Wallet, Trust Wallet";
+    
+    if (confirm(message + "\n\nOpen MetaMask download page?")) {
+      window.open('https://metamask.io/download/', '_blank');
+    }
   };
 
   const addCitreaTestnet = async () => {
