@@ -169,12 +169,12 @@ Bitcoin is a decentralized digital currency that operates without a central bank
 *Explanation: Bitcoin was created by the pseudonymous Satoshi Nakamoto.`)
 
   const [parsedQuiz, setParsedQuiz] = useState<QuizCardData | null>(null)
-  const [apiFormat, setApiFormat] = useState<any>(null)
+  const [apiFormat, setApiFormat] = useState<ReturnType<typeof convertToAPIFormat> | null>(null)
   const [isCreating, setIsCreating] = useState(false)
 
   const handleParse = () => {
     const result = parseMarkdownToQuiz(markdown)
-    setParsedQuiz(result)
+    setParsedQuiz(result) // Used for potential debugging or future features
     if (result) {
       setApiFormat(convertToAPIFormat(result))
     }

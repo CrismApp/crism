@@ -283,7 +283,7 @@ export default function Learn() {
   // Function to split content into flashcard chunks
   const splitContentIntoChunks = (content: string): string[] => {
     // First try to split by paragraphs (double newlines)
-    let paragraphs = content.split(/\n\n+/).filter(p => p.trim().length > 0)
+    const paragraphs = content.split(/\n\n+/).filter(p => p.trim().length > 0)
     
     const chunks: string[] = []
     const maxChunkLength = 300 // Characters per chunk for comfortable reading
@@ -354,7 +354,7 @@ export default function Learn() {
       window.addEventListener('keydown', handleKeyPress)
       return () => window.removeEventListener('keydown', handleKeyPress)
     }
-  }, [learningMode, currentContentIndex, selectedQuiz])
+  }, [learningMode, currentContentIndex, selectedQuiz, nextContent, previousContent])
 
   if (loading) {
     return (
