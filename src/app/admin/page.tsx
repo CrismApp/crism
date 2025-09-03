@@ -10,41 +10,48 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react"
-import { parseMarkdownToQuiz, type QuizCardData } from "@/components/markdown-quiz-parser"
+import { parseMarkdownToQuiz, convertToAPIFormat, type QuizCardData } from "@/components/markdown-quiz-parser"
 
 export default function AdminPage() {
   const { data: session, isPending } = useSession()
   const router = useRouter()
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
+  const [title, setTitle] = useState("Crest App Knowledge Quiz")
+  const [description, setDescription] = useState("Test your knowledge about the Crest cryptocurrency trading platform, Bitcoin basics, and platform features.")
   const [image, setImage] = useState("")
-  const [markdown, setMarkdown] = useState(`# Introduction to Bitcoin
+  const [markdown, setMarkdown] = useState(`# Crest App Knowledge Quiz
 
 ## Content
-Bitcoin is a decentralized digital currency that operates without a central bank or single administrator. It was invented in 2008 by an unknown person or group using the name Satoshi Nakamoto and started in 2009 when its implementation was released as open-source software.
+
+Crest is a specialized cryptocurrency trading platform that focuses primarily on Bitcoin transactions. The platform's core philosophy centers around three key principles: keeping more satoshis (sats), saving time, and maintaining user control. Crest aims to provide users with maximum control over their Bitcoin transactions while minimizing time investment and maximizing returns. The platform is designed for Bitcoin enthusiasts, cryptocurrency traders, and users who prioritize autonomy in their crypto transactions. Key features include comprehensive Bitcoin trading functionality, multiple payment methods, real-time price quotes, advanced trading tools like dollar-cost averaging, and robust security measures including two-factor authentication and cold storage solutions.
 
 ## Questions
 
-### What year was Bitcoin invented?
-- 2007
-- **2008**
-- 2009
-- 2010
-*Explanation: Bitcoin was invented in 2008 by Satoshi Nakamoto, though the network launched in 2009.
+### What is Crest's primary focus as a cryptocurrency platform?
 
-### Who created Bitcoin?
-- Vitalik Buterin
-- **Satoshi Nakamoto**
-- Elon Musk
-- Mark Zuckerberg
-*Explanation: Bitcoin was created by the pseudonymous Satoshi Nakamoto.
+- Ethereum trading
+- **Bitcoin transactions**
+- Multi-cryptocurrency exchange
+- NFT marketplace
 
-### What type of currency is Bitcoin?
-- Centralized digital currency
-- **Decentralized digital currency**
-- Physical currency
-- Government-issued currency
-*Explanation: Bitcoin is a decentralized digital currency that operates without a central authority.`)
+*Explanation: Crest is specifically designed as a cryptocurrency trading platform with a primary focus on Bitcoin transactions.
+
+### What are the three key principles that define Crest's philosophy?
+
+- Speed, security, and scalability
+- **Keep more sats, save time, and maintain control**
+- Buy low, sell high, and diversify
+- Education, community, and innovation
+
+*Explanation: Crest's core philosophy centers around helping users keep more satoshis (sats), minimizing time investment, and providing maximum user control.
+
+### What does "sats" refer to in Bitcoin terminology?
+
+- Bitcoin trading fees
+- **The smallest unit of Bitcoin (0.00000001 BTC)**
+- Security authentication tokens
+- Smart contract addresses
+
+*Explanation: "Sats" is short for satoshis, the smallest divisible unit of Bitcoin, equal to 0.00000001 BTC.`)
 
   const [parsedQuiz, setParsedQuiz] = useState<QuizCardData | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -117,24 +124,23 @@ Bitcoin is a decentralized digital currency that operates without a central bank
     setSubmitStatus(null)
 
     try {
+      // Use the new convertToAPIFormat function but override title/description if provided
+      const apiFormat = convertToAPIFormat(parsedQuiz)
+      const requestBody = {
+        ...apiFormat,
+        title: title, // Override with admin-provided title
+        description: description, // Override with admin-provided description
+        image: image || undefined
+      }
+
+      console.log('🚀 Submitting quiz with content:', requestBody)
+
       const response = await fetch('/api/quizzes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title,
-          description,
-          image: image || undefined,
-          questions: parsedQuiz.questions.map(q => ({
-            question: q.question,
-            answers: q.options.map((option, index) => ({
-              text: option,
-              isCorrect: index === q.correctAnswer
-            })),
-            points: 10 // Default points per question
-          }))
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (response.ok) {

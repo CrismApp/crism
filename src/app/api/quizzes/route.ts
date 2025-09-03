@@ -18,6 +18,7 @@ interface QuizQuestion {
 interface CreateQuizRequest {
   title: string
   description: string
+  content?: string  // Optional learning content
   image?: string
   questions: QuizQuestion[]
 }
@@ -28,7 +29,7 @@ export async function GET() {
     
     // Fetch all active quizzes, sorted by creation date (newest first)
     const quizzes = await Quiz.find({ isActive: true })
-      .select('title description image totalPoints questions createdAt')
+      .select('title description content image totalPoints questions createdAt')
       .sort({ createdAt: -1 })
     
     return NextResponse.json(quizzes)
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     await connectToDb()
 
     const body: CreateQuizRequest = await request.json()
-    const { title, description, image, questions } = body
+    const { title, description, content, image, questions } = body
 
     // Validate required fields
     if (!title || !description || !questions || !Array.isArray(questions)) {
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
     const quiz = new Quiz({
       title,
       description,
+      content,
       image,
       questions: questions.map((q: QuizQuestion) => ({
         question: q.question,
@@ -118,6 +120,7 @@ export async function POST(request: NextRequest) {
         id: savedQuiz._id,
         title: savedQuiz.title,
         description: savedQuiz.description,
+        content: savedQuiz.content,
         image: savedQuiz.image,
         questions: savedQuiz.questions,
         totalPoints: savedQuiz.totalPoints,

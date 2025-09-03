@@ -178,6 +178,10 @@ const quizSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  content: {
+    type: String,
+    required: false  // Optional learning content before quiz
+  },
   image: String,
   questions: [{
     question: {

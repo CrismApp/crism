@@ -129,6 +129,23 @@ export function parseMarkdownToQuiz(markdown: string): QuizCardData | null {
   }
 }
 
+// Convert QuizCardData to API format
+export function convertToAPIFormat(quizData: QuizCardData) {
+  return {
+    title: quizData.title,
+    description: quizData.content.substring(0, 200) + (quizData.content.length > 200 ? "..." : ""), // Short description
+    content: quizData.content, // Full learning content
+    questions: quizData.questions.map(q => ({
+      question: q.question,
+      answers: q.options.map((option, index) => ({
+        text: option,
+        isCorrect: index === q.correctAnswer
+      })),
+      points: 10 // Default points per question
+    }))
+  }
+}
+
 export function MarkdownQuizParser() {
   const [markdown, setMarkdown] = useState(`# Bitcoin Basics
 
@@ -152,10 +169,44 @@ Bitcoin is a decentralized digital currency that operates without a central bank
 *Explanation: Bitcoin was created by the pseudonymous Satoshi Nakamoto.`)
 
   const [parsedQuiz, setParsedQuiz] = useState<QuizCardData | null>(null)
+  const [apiFormat, setApiFormat] = useState<any>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   const handleParse = () => {
     const result = parseMarkdownToQuiz(markdown)
     setParsedQuiz(result)
+    if (result) {
+      setApiFormat(convertToAPIFormat(result))
+    }
+  }
+
+  const handleCreateQuiz = async () => {
+    if (!apiFormat) return
+
+    setIsCreating(true)
+    try {
+      const response = await fetch('/api/quizzes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiFormat)
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert('Quiz created successfully!')
+        console.log('Created quiz:', result)
+      } else {
+        const error = await response.json()
+        alert(`Error creating quiz: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error creating quiz:', error)
+      alert('Failed to create quiz')
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -185,21 +236,32 @@ Bitcoin is a decentralized digital currency that operates without a central bank
             className="w-full h-96 p-3 border rounded-md font-mono text-sm bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-orange-500"
             placeholder="Enter your markdown here..."
           />
-          <button
-            onClick={handleParse}
-            className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
-          >
-            Parse Markdown
-          </button>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={handleParse}
+              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+            >
+              Parse Markdown
+            </button>
+            {apiFormat && (
+              <button
+                onClick={handleCreateQuiz}
+                disabled={isCreating}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
+              >
+                {isCreating ? 'Creating...' : 'Create Quiz'}
+              </button>
+            )}
+          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-300">Parsed Result:</label>
+          <label className="block text-sm font-medium mb-2 text-gray-300">API Format:</label>
           <div className="h-96 p-3 border rounded-md bg-gray-800 border-gray-700 overflow-auto">
-            {parsedQuiz ? (
-              <pre className="text-sm whitespace-pre-wrap text-gray-300">{JSON.stringify(parsedQuiz, null, 2)}</pre>
+            {apiFormat ? (
+              <pre className="text-sm whitespace-pre-wrap text-gray-300">{JSON.stringify(apiFormat, null, 2)}</pre>
             ) : (
-              <p className="text-gray-400">Click &quot;Parse Markdown&quot; to see the result</p>
+              <p className="text-gray-400">Click &quot;Parse Markdown&quot; to see the API format</p>
             )}
           </div>
         </div>

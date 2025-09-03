@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
 import { useUser } from "@/context/UserContext"
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
@@ -14,6 +15,7 @@ interface Quiz {
   _id: string
   title: string
   description: string
+  content?: string  // Optional learning content
   image?: string
   questions: Question[]
   totalPoints: number
@@ -58,6 +60,8 @@ export default function Learn() {
   const { refreshUser } = useUser()
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null)
+  const [learningMode, setLearningMode] = useState<'content' | 'quiz'>('content')  // New state for learning flow
+  const [currentContentIndex, setCurrentContentIndex] = useState(0)  // Track current content chunk
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestionIndex: 0,
     selectedAnswers: [],
@@ -107,8 +111,13 @@ export default function Learn() {
       const response = await fetch("/api/quizzes")
       if (response.ok) {
         const data = await response.json()
+        console.log('📥 Fetched quizzes from API:', data)
         // Ensure data is an array
         if (Array.isArray(data)) {
+          // Debug: check if any quiz has content
+          data.forEach((quiz, index) => {
+            console.log(`📋 Quiz ${index + 1}: "${quiz.title}" has content:`, !!quiz.content, `(${quiz.content?.length || 0} chars)`)
+          })
           setQuizzes(data)
         } else {
           console.error("Expected quizzes to be an array, got:", typeof data)
@@ -139,7 +148,16 @@ export default function Learn() {
   }
 
   const startQuiz = (quiz: Quiz) => {
+    console.log('🔍 Starting quiz with data:', quiz)
+    console.log('🔍 Quiz has content?', !!quiz.content)
+    console.log('🔍 Content length:', quiz.content?.length || 0)
+    
     setSelectedQuiz(quiz)
+    setCurrentContentIndex(0)  // Reset content index
+    // If quiz has content, start in content mode, otherwise go directly to quiz
+    setLearningMode(quiz.content ? 'content' : 'quiz')
+    console.log('🔍 Learning mode set to:', quiz.content ? 'content' : 'quiz')
+    
     setQuizState({
       currentQuestionIndex: 0,
       selectedAnswers: new Array(quiz.questions.length).fill(-1),
@@ -244,6 +262,8 @@ export default function Learn() {
 
   const resetQuiz = () => {
     setSelectedQuiz(null)
+    setLearningMode('content')
+    setCurrentContentIndex(0)  // Reset content index
     setQuizState({
       currentQuestionIndex: 0,
       selectedAnswers: [],
@@ -254,6 +274,87 @@ export default function Learn() {
     })
     setCompletionResult(null)
   }
+
+  const startQuizFromContent = () => {
+    setLearningMode('quiz')
+    setCurrentContentIndex(0)  // Reset for next time
+  }
+
+  // Function to split content into flashcard chunks
+  const splitContentIntoChunks = (content: string): string[] => {
+    // First try to split by paragraphs (double newlines)
+    let paragraphs = content.split(/\n\n+/).filter(p => p.trim().length > 0)
+    
+    const chunks: string[] = []
+    const maxChunkLength = 300 // Characters per chunk for comfortable reading
+    
+    for (const paragraph of paragraphs) {
+      if (paragraph.length <= maxChunkLength) {
+        // Paragraph is small enough, use as is
+        chunks.push(paragraph.trim())
+      } else {
+        // Paragraph is too long, split by sentences
+        const sentences = paragraph.split(/(?<=[.!?])\s+/)
+        let currentChunk = ""
+        
+        for (const sentence of sentences) {
+          if (currentChunk.length + sentence.length > maxChunkLength && currentChunk.length > 0) {
+            chunks.push(currentChunk.trim())
+            currentChunk = sentence + " "
+          } else {
+            currentChunk += sentence + " "
+          }
+        }
+        
+        if (currentChunk.trim()) {
+          chunks.push(currentChunk.trim())
+        }
+      }
+    }
+
+    return chunks.length > 0 ? chunks : [content] // Fallback to original content
+  }
+
+  const nextContent = () => {
+    if (selectedQuiz?.content) {
+      const chunks = splitContentIntoChunks(selectedQuiz.content)
+      if (currentContentIndex < chunks.length - 1) {
+        setCurrentContentIndex(prev => prev + 1)
+      }
+    }
+  }
+
+  const previousContent = () => {
+    if (currentContentIndex > 0) {
+      setCurrentContentIndex(prev => prev - 1)
+    }
+  }
+
+  // Keyboard navigation for flashcards
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (learningMode === 'content' && selectedQuiz?.content) {
+        const chunks = splitContentIntoChunks(selectedQuiz.content)
+        
+        if (event.key === 'ArrowRight' || event.key === ' ') {
+          event.preventDefault()
+          if (currentContentIndex < chunks.length - 1) {
+            nextContent()
+          } else {
+            startQuizFromContent()
+          }
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault()
+          previousContent()
+        }
+      }
+    }
+
+    if (learningMode === 'content') {
+      window.addEventListener('keydown', handleKeyPress)
+      return () => window.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [learningMode, currentContentIndex, selectedQuiz])
 
   if (loading) {
     return (
@@ -268,6 +369,139 @@ export default function Learn() {
 
   // Quiz Interface
   if (selectedQuiz) {
+    console.log('🎯 Selected quiz details:', {
+      title: selectedQuiz.title,
+      hasContent: !!selectedQuiz.content,
+      contentLength: selectedQuiz.content?.length || 0,
+      learningMode: learningMode
+    })
+    
+    // Show learning content first if available
+    if (learningMode === 'content' && selectedQuiz.content) {
+      console.log('📖 Rendering learning content interface')
+      
+      const contentChunks = splitContentIntoChunks(selectedQuiz.content)
+      const currentChunk = contentChunks[currentContentIndex]
+      const isLastChunk = currentContentIndex === contentChunks.length - 1
+      const isFirstChunk = currentContentIndex === 0
+      
+      return (
+        <div className="min-h-screen bg-black p-4">
+          <div className="max-w-2xl mx-auto">
+            <Card className="shadow-xl border-orange-500/20">
+              <CardHeader className="pb-4 border-b border-orange-500/20">
+                <div className="flex items-center justify-between">
+                  <Button onClick={resetQuiz} variant="ghost" size="sm" className="text-gray-400 hover:text-orange-500 hover:bg-orange-500/10">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                    {currentContentIndex + 1} of {contentChunks.length}
+                  </Badge>
+                </div>
+                <div className="mt-4">
+                  <CardTitle className="text-2xl font-bold text-white">{selectedQuiz.title}</CardTitle>
+                  <p className="text-gray-400 mt-2">{selectedQuiz.description}</p>
+                  
+                  {/* Progress bar for content */}
+                  <div className="mt-4">
+                    <div className="flex justify-between text-sm text-gray-400 mb-2">
+                      <span>Learning Progress</span>
+                      <span>{Math.round(((currentContentIndex + 1) / contentChunks.length) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${((currentContentIndex + 1) / contentChunks.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-6 pt-6">
+                <div className="mb-8">
+                  <div className="relative">
+                    {/* Flashcard-style design with animation */}
+                    <AnimatePresence mode="wait">
+                      <motion.div 
+                        key={currentContentIndex}
+                        initial={{ opacity: 0, x: 50, scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -50, scale: 0.95 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 rounded-xl p-8 border border-orange-500/20 shadow-lg"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                          
+                          </div>
+                          <Badge variant="outline" className="border-orange-500/30 text-orange-300">
+                            {currentContentIndex + 1}/{contentChunks.length}
+                          </Badge>
+                        </div>
+                        
+                        <div className="prose prose-lg max-w-none">
+                          <p className="text-lg leading-relaxed text-gray-100 m-0 font-light">
+                            {currentChunk}
+                          </p>
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                    
+                    {/* Shadow effect for card stack */}
+                    {!isLastChunk && (
+                      <>
+                        <div className="absolute inset-0 bg-gray-800/30 rounded-xl transform translate-x-1 translate-y-1 -z-10"></div>
+                        <div className="absolute inset-0 bg-gray-900/20 rounded-xl transform translate-x-2 translate-y-2 -z-20"></div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <Button 
+                    onClick={previousContent}
+                    disabled={isFirstChunk}
+                    variant="outline"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  {/* Keyboard hint */}
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500 mb-1">Use arrow keys or spacebar to navigate</p>
+                  </div>
+
+                  {isLastChunk ? (
+                    <Button 
+                      onClick={startQuizFromContent} 
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
+                      size="lg"
+                    >
+                      Start Quiz
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={nextContent}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3"
+                      size="lg"
+                    >
+                      Next
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )
+    }
+
     const currentQuestion = selectedQuiz.questions[quizState.currentQuestionIndex]
     const selectedAnswer = quizState.selectedAnswers[quizState.currentQuestionIndex]
     const progress = ((quizState.currentQuestionIndex + 1) / selectedQuiz.questions.length) * 100
