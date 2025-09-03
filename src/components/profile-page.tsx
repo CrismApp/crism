@@ -4,10 +4,14 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { HamburgerMenu } from "@/components/ui/hamburger-menu"
+import { Sidebar } from "@/components/sidebar"
 import { Mail, Award, Coins, Trophy, LogOut, Edit, Wallet } from "lucide-react"
 import { useSession, signOut } from "@/lib/auth-client"
+import { useUser } from "@/context/UserContext"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { GoldCounter, GoldBadge } from "@/components/gold-display"
 
 // Extended user type with custom fields
 interface ExtendedUser {
@@ -29,14 +33,43 @@ interface ExtendedUser {
 
 interface ProfilePageProps {
   onBack?: () => void
+  walletAddress?: string
+  onDisconnect: () => void
+  onWalletConnect: (address: string) => void
+  onNavigate?: () => void
 }
 
-export function ProfilePage({ onBack }: ProfilePageProps) {
-  const { data: session } = useSession()
+export function ProfilePage({ onBack, walletAddress, onDisconnect, onWalletConnect, onNavigate }: ProfilePageProps) {
+  const { data: session, isPending: sessionLoading } = useSession()
+  const { user, isLoading: userLoading } = useUser()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
 
-  const user = session?.user as ExtendedUser | undefined
+  // Use user from context, fallback to session user for compatibility
+  const displayUser = user || session?.user as ExtendedUser | undefined
+  
+  // Show loading state if we're still loading session or user data
+  const isLoading = sessionLoading || userLoading || (!user && !session?.user)
+
+  console.log('👤 Profile Page - Current user from context:', user)
+  console.log('👤 Profile Page - Session user:', session?.user)
+  console.log('👤 Profile Page - Display user:', displayUser)
+  console.log('🔄 Profile Page - Loading states:', { sessionLoading, userLoading, isLoading })
+
+  // Provide fallback user data for sidebar only when we're sure we have session but no user data
+  const userWithFallback = user || (session?.user ? {
+    id: session.user.id || '',
+    email: session.user.email || '',
+    name: session.user.name || session.user.email || 'User',
+    goldAccumulated: 0,
+    rank: 'Bronze'
+  } : {
+    id: '',
+    email: '',
+    name: 'Loading...',
+    goldAccumulated: 0,
+    rank: 'Bronze'
+  })
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -81,7 +114,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
     }
   }
 
-  if (!user) {
+  if (!displayUser) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -93,23 +126,39 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Profile</h1>
-          <div className="flex items-center gap-2">
-            {onBack && (
-              <Button
-                onClick={onBack}
-                variant="outline"
-                className="border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black"
-              >
-                Back to Dashboard
-              </Button>
-            )}
-            <Button
-              onClick={handleSignOut}
+    <div className="min-h-screen bg-black text-white">
+      <div className="lg:grid lg:grid-cols-[280px_1fr]">
+        
+        <HamburgerMenu>
+          <Sidebar 
+            walletAddress={walletAddress} 
+            user={userWithFallback}
+            onDisconnect={onDisconnect}
+            onShowProfile={() => {}} // Already on profile page
+            onWalletConnect={onWalletConnect}
+            onNavigate={onNavigate}
+          />
+        </HamburgerMenu>
+
+        {/* Main Content */}
+        <main className="p-4 lg:p-6 pt-20 lg:pt-6">
+          <div className="max-w-2xl mx-auto">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-3xl font-bold">Profile</h1>
+              <div className="flex items-center gap-2">
+                {onBack && (
+                  <Button
+                    onClick={onBack}
+                    variant="outline"
+                    className="border-orange-500/20 text-orange-500 hover:bg-orange-500 hover:text-black"
+                  >
+                    Back to Dashboard
+                  </Button>
+                )}
+                <Button
+                  onClick={handleSignOut}
               disabled={isSigningOut}
               variant="outline"
               className="border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white"
@@ -135,27 +184,39 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
             {/* Avatar */}
             <div className="relative">
               <Avatar className="w-24 h-24 border-2 border-orange-500/30">
-                <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
+                <AvatarImage src={displayUser.image || undefined} alt={displayUser.name || "User"} />
                 <AvatarFallback className="bg-orange-500 text-white text-2xl font-bold">
-                  {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                  {displayUser.name?.charAt(0) || displayUser.email?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
+              
+              {/* Rank Badge */}
               <div className="absolute -bottom-2 -right-2">
-                <Badge className={`${getRankColor(user.rank || 'Bronze')} px-2 py-1`}>
+                <Badge className={`${getRankColor(displayUser.rank || 'Bronze')} px-2 py-1`}>
                   <div className="flex items-center gap-1">
-                    {getRankIcon(user.rank || 'Bronze')}
-                    <span className="text-xs font-semibold">{user.rank || 'Bronze'}</span>
+                    {getRankIcon(displayUser.rank || 'Bronze')}
+                    <span className="text-xs font-semibold">{displayUser.rank || 'Bronze'}</span>
                   </div>
                 </Badge>
+              </div>
+
+              {/* Gold Badge */}
+              <div className="absolute -top-2 -left-2">
+                <GoldBadge 
+                  amount={displayUser.goldAccumulated || 0}
+                  className="shadow-lg"
+                />
               </div>
             </div>
 
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-2">{user.name || "Anonymous"}</h2>
+              <h2 className="text-2xl font-bold mb-2">
+                {isLoading ? "Loading..." : (displayUser?.name || "Anonymous")}
+              </h2>
               <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400 mb-4">
                 <Mail className="h-4 w-4" />
-                <span>{user.email}</span>
+                <span>{displayUser?.email || "Loading..."}</span>
               </div>
               
               {/* Stats */}
@@ -165,10 +226,12 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                     <Coins className="h-5 w-5" />
                     <span className="text-lg font-semibold">Gold Accumulated</span>
                   </div>
-                  <div className="text-3xl font-bold text-orange-400">
-                    {user.goldAccumulated?.toLocaleString() || "0"}
-                  </div>
-                  <div className="text-sm text-gray-400">Total earned</div>
+                  <GoldCounter 
+                    amount={displayUser.goldAccumulated || 0}
+                    animated={true}
+                    className="justify-center md:justify-start"
+                  />
+                  <div className="text-sm text-gray-400 mt-1">Total earned</div>
                 </div>
 
                 <div className="text-center md:text-left">
@@ -177,7 +240,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                     <span className="text-lg font-semibold">Current Rank</span>
                   </div>
                   <div className="text-2xl font-bold text-orange-400 capitalize">
-                    {user.rank || "Bronze"}
+                    {displayUser.rank || "Bronze"}
                   </div>
                   <div className="text-sm text-gray-400">Keep earning to rank up!</div>
                 </div>
@@ -203,27 +266,27 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-gray-800">
               <span className="text-gray-400">Full Name</span>
-              <span className="text-white">{user.name || "Not set"}</span>
+              <span className="text-white">{displayUser.name || "Not set"}</span>
             </div>
             
             <div className="flex justify-between items-center py-2 border-b border-gray-800">
               <span className="text-gray-400">Email Address</span>
-              <span className="text-white">{user.email}</span>
+              <span className="text-white">{displayUser.email}</span>
             </div>
             
             <div className="flex justify-between items-center py-2 border-b border-gray-800">
               <span className="text-gray-400">Account Created</span>
               <span className="text-white">
-                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Recently"}
+                {displayUser.createdAt ? new Date(displayUser.createdAt).toLocaleDateString() : "Recently"}
               </span>
             </div>
 
             <div className="flex justify-between items-center py-2 border-b border-gray-800">
               <span className="text-gray-400">Wallet Connected</span>
               <span className="text-white">
-                {user.walletAddress ? (
+                {displayUser.walletAddress ? (
                   <span className="font-mono text-sm">
-                    {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+                    {displayUser.walletAddress.slice(0, 6)}...{displayUser.walletAddress.slice(-4)}
                   </span>
                 ) : (
                   "Not connected"
@@ -248,8 +311,8 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   <div className="text-sm text-gray-400">Reach Silver rank</div>
                 </div>
               </div>
-              <Badge className={`${(user.rank !== 'Bronze') ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                {(user.rank !== 'Bronze') ? 'Completed' : 'In Progress'}
+              <Badge className={`${(displayUser.rank !== 'Bronze') ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                {(displayUser.rank !== 'Bronze') ? 'Completed' : 'In Progress'}
               </Badge>
             </div>
 
@@ -263,8 +326,8 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   <div className="text-sm text-gray-400">Earn your first gold coins</div>
                 </div>
               </div>
-              <Badge className={`${(user?.goldAccumulated || 0) > 0 ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                {(user?.goldAccumulated || 0) > 0 ? 'Completed' : 'Pending'}
+              <Badge className={`${(displayUser?.goldAccumulated || 0) > 0 ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                {(displayUser?.goldAccumulated || 0) > 0 ? 'Completed' : 'Pending'}
               </Badge>
             </div>
 
@@ -278,12 +341,14 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   <div className="text-sm text-gray-400">Connect your first wallet</div>
                 </div>
               </div>
-              <Badge className={`${user.walletAddress ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                {user.walletAddress ? 'Completed' : 'Pending'}
+              <Badge className={`${displayUser.walletAddress ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                {displayUser.walletAddress ? 'Completed' : 'Pending'}
               </Badge>
             </div>
           </div>
         </Card>
+          </div>
+        </main>
       </div>
     </div>
   )

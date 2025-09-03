@@ -203,7 +203,7 @@ const quizSchema = new mongoose.Schema({
     default: Date.now
   },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String, // Changed to String to match Better Auth user ID
     ref: 'User'
   }
 });
