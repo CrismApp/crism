@@ -4,6 +4,24 @@ import { connectToDb } from "@/lib/db"
 import { Quiz } from "@/lib/model"
 import { headers } from "next/headers"
 
+interface QuizAnswer {
+  text: string
+  isCorrect: boolean
+}
+
+interface QuizQuestion {
+  question: string
+  answers: QuizAnswer[]
+  points?: number
+}
+
+interface CreateQuizRequest {
+  title: string
+  description: string
+  image?: string
+  questions: QuizQuestion[]
+}
+
 export async function GET() {
   try {
     await connectToDb()
@@ -38,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     await connectToDb()
 
-    const body = await request.json()
+    const body: CreateQuizRequest = await request.json()
     const { title, description, image, questions } = body
 
     // Validate required fields
@@ -59,7 +77,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if at least one answer is marked as correct
-      const hasCorrectAnswer = question.answers.some((answer: any) => answer.isCorrect === true)
+      const hasCorrectAnswer = question.answers.some((answer: QuizAnswer) => answer.isCorrect === true)
       if (!hasCorrectAnswer) {
         return NextResponse.json(
           { error: "Each question must have at least one correct answer" },
@@ -69,16 +87,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate total points
-    const totalPoints = questions.reduce((sum: number, q: any) => sum + (q.points || 10), 0)
+    const totalPoints = questions.reduce((sum: number, q: QuizQuestion) => sum + (q.points || 10), 0)
 
     // Create the quiz
     const quiz = new Quiz({
       title,
       description,
       image,
-      questions: questions.map((q: any) => ({
+      questions: questions.map((q: QuizQuestion) => ({
         question: q.question,
-        answers: q.answers.map((a: any) => ({
+        answers: q.answers.map((a: QuizAnswer) => ({
           text: a.text,
           isCorrect: a.isCorrect
         })),

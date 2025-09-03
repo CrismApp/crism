@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date()
       })
       
-      const savedUser = await newUser.save()
+      await newUser.save()
       console.log(`✅ Created new user with ${goldAwarded} gold`)
     } else {
       console.log(`👤 Found existing user with current gold: ${existingUser.goldAccumulated}`)

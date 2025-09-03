@@ -14,7 +14,8 @@ interface GoldDisplayProps {
 }
 
 export function GoldDisplay({ 
-  amount = 0,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  amount: _amount = 0,
   variant = "default", 
   showIcon = true, 
   showLabel = true,
@@ -113,7 +114,8 @@ export function GoldDisplay({
 }
 
 // Specialized components for different use cases
-export function GoldBadge({ amount = 30, className }: { amount?: number; className?: string }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function GoldBadge({ amount: _amount = 30, className }: { amount?: number; className?: string }) {
   return (
     <GoldDisplay
       amount={30} // Static amount
@@ -125,7 +127,8 @@ export function GoldBadge({ amount = 30, className }: { amount?: number; classNa
 }
 
 export function GoldCounter({ 
-  amount = 30, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  amount: _amount = 30, 
   trend, 
   animated = false,
   className 

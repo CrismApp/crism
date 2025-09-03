@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Progress } from "./ui/progress"
-import { BookOpen, Play, Clock, Star, CheckCircle, Trophy, ArrowLeft, ArrowRight, RotateCcw, Award, Coins, AlertCircle } from "lucide-react"
+import { BookOpen, Play, Clock, Star, CheckCircle, Trophy, ArrowLeft, ArrowRight, Award, Coins, AlertCircle } from "lucide-react"
 
 interface Quiz {
   _id: string

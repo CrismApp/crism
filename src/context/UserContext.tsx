@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useSession } from '@/lib/auth-client'
 
 interface User {
@@ -36,7 +36,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     if (!session?.user) return
 
     console.log('🔄 Refreshing user data...')
@@ -73,7 +73,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [session?.user])
 
   // Initial load when session changes
   useEffect(() => {
@@ -82,7 +82,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } else {
       setUser(null)
     }
-  }, [session?.user])
+  }, [session?.user, refreshUser])
 
   return (
     <UserContext.Provider value={{ user, refreshUser, isLoading, error }}>

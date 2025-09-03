@@ -13,11 +13,9 @@ import {
   LogOut,
   Award,
   ShoppingBag,
-  Book,
-  Settings
+  Book
 } from "lucide-react"
 import { GoldDisplay } from "@/components/gold-display"
-import { WalletCard } from "@/components/wallet-card"
 import { signOut } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"

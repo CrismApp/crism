@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { connectToDb } from "@/lib/db"
 import { User } from "@/lib/model"
@@ -53,7 +53,7 @@ export async function POST() {
       console.log('✅ User document already exists')
       
       // Update user with any missing session data
-      const updates: any = {
+      const updates: Record<string, unknown> = {
         updatedAt: new Date()
       }
       
